@@ -26,26 +26,6 @@ Plataforma de streaming de anime con arquitectura **Cliente-Servidor** de alto r
   - **📋 Copiar Magnet**: para usar en clientes externos si se desea.
 - **Reproducción Local de Caps**: una vez descargado el capítulo, puedes reproducirlo directamente en la aplicación desde el servidor local sin consumir ancho de banda de internet y con 0 buffering.
 
-### 4. 📺 Servidores al estilo AnimeFLV
-- Selección múltiple de servidores por episodio:
-  - **Streamwish [HD]**
-  - **Mega Cloud**
-  - **Streamtape**
-  - **YourUpload**
-  - **Mp4Upload** (Castellano / Latino / Sub)
-- Selector de servidor dinámico en el encabezado del reproductor con cambio instantáneo.
-
-### 5. 🎨 Frontend Cómodo y Movimientos Suaves (Estilo Crunchyroll)
-- Tema visual oscuro Crunchyroll (`#0b0c0e`, acentos anaranjados `#f47521`, tarjetas `#14151a`).
-- **Carrusel Billboard Principal**: anime destacado con sinopsis, puntuación, géneros y botón de inicio rápido.
-- **Fila "Siguiendo Viendo"**: muestra miniaturas con barra de progreso naranja y tiempo restante estimado (ej. "14 min restantes"). Al hacer clic reanuda en el segundo exacto.
-- **Reproductor Cinema**:
-  - Controles completos: Play/Pausa, barra de búsqueda, volumen.
-  - **Saltar Intro (+85s)** y **Saltar Outro (+90s)** como en Crunchyroll.
-  - Velocidad de reproducción (0.5x, 0.75x, 1x, 1.25x, 1.5x, 2x).
-  - Modo teatro y Pantalla completa (`F` o botón).
-  - Atajos de teclado: Espacio para pausar, flechas para avanzar/retroceder 10s.
-
 ---
 
 ## 📁 Estructura del Proyecto
