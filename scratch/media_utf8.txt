@@ -1,0 +1,12 @@
+kit.start(app, element, {
+							node_ids: [0, 2, 12],
+							data: [null,{type:"data",data:{user:null},uses:{dependencies:["https://animeav1.com/media/auth"]}},{type:"data",data:{media:{id:4434,categoryId:5,title:"Shiguang Dailiren III",aka:{"en-us":"Link Click Season 3","ja-jp":"时光代理人III"},genres:[{id:6,name:"Drama",type:0,slug:"drama",malId:8},{id:8,name:"Misterio",type:0,slug:"misterio",malId:7},{id:15,name:"Suspenso",type:0,slug:"suspenso",malId:41},{id:22,name:"Elenco Adulto",type:1,slug:"elenco-adulto",malId:50},{id:45,name:"Superpoderes",type:1,slug:"superpoderes",malId:31}],synopsis:"Después de que el incidente de Li Tianchen llegara a su fin, el Estudio Fotográfico Time volvió a una paz superficial. Sin embargo, la noticia de la desaparición de Xia Fei volvió a atraer a todos a un cruce de caminos del destino. Con el regreso de Vein y el despertar de sus superpoderes por parte de Qiao Ling, Cheng Xiaoshi y Lu Guang comienzan a descubrir gradualmente los secretos del caso del incendio de Bahati, y el padre de Cheng Xiaoshi, Cheng Weimin, y su madre, Shao Yuanyuan, también parecen tener conexiones complicadas con ello. A medida que la investigación se profundiza, Liu Xiao, de una organización misteriosa, inicia su operación, y la intervención del oficial de policía de Yingdu, Jae, complica aún más esta búsqueda de la verdad...",poster:null,backdrop:null,trailer:"VC4EbRZVJCk",status:2,runtime:null,startDate:"2026-08-14",nextDate:"2026-08-14",endDate:null,waitDays:7,featured:false,mature:false,episodesCount:8,score:8.59,votes:1292,slug:"shiguang-dailiren-iii",malId:61607,seasons:null,createdAt:"2026-08-14 13:47:05.48571+00",updatedAt:"2026-08-25 01:18:22.372595+00",category:{id:5,name:"ONA",slug:"ona",malId:"ONA"},episodes:[{id:59857,number:1},{id:59858,number:2},{id:59933,number:3},{id:60007,number:4},{id:60083,number:5},{id:60159,number:6},{id:60230,number:7},{id:60286,number:8}],relations:[{type:1,destination:{id:2084,slug:"shiguang-dailiren-ii",title:"Shiguang Dailiren II",startDate:"2023-07-14"}}]}},uses:{params:["slug"]}}],
+							form: null,
+							error: null
+						});
+					});
+				}
+			</script>
+		</div>
+	</body>
+</html>

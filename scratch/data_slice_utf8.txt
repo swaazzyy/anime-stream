@@ -1,0 +1,12 @@
+kit.start(app, element, {
+							node_ids: [0, 2, 13],
+							data: [null,{type:"data",data:{user:null},uses:{dependencies:["https://animeav1.com/media/tensei-shitara-ken-deshita-ii/auth"]}},{type:"data",data:{media:{id:4442,categoryId:1,title:"Tensei shitara Ken deshita II",aka:{"en-us":"Reincarnated as a Sword Season 2","ja-jp":"転生したら剣でした II"},genres:[{id:32,name:"Isekai",type:1,slug:"isekai",malId:62},{id:1,name:"Acción",type:0,slug:"accion",malId:1},{id:2,name:"Aventura",type:0,slug:"aventura",malId:2},{id:7,name:"Fantasía",type:0,slug:"fantasia",malId:10}],synopsis:"Segunda temporada de Tensei shitara Ken deshita.",poster:null,backdrop:null,trailer:"Yt364dCCxIE",status:2,runtime:null,startDate:"2026-09-30",nextDate:"2026-09-30",endDate:null,waitDays:7,featured:false,mature:false,episodesCount:1,score:0,votes:104,slug:"tensei-shitara-ken-deshita-ii",malId:53913,seasons:null,createdAt:"2026-09-30 12:41:06.374918+00",updatedAt:"2026-09-30 19:59:27.452+00",category:{id:1,name:"TV Anime",slug:"tv-anime"},episodes:[{id:60319,number:1}],relations:[{type:1,destination:{id:2072,slug:"tensei-shitara-ken-deshita",title:"Tensei shitara Ken deshita",startDate:"2022-10-05"}}]},episode:{id:60319,mediaId:4442,title:null,number:1,season:null,relativeNumber:null,variants:{SUB:1},filler:false,publishedAt:"2026-09-30T19:58:53.224+00:00",createdAt:"2026-09-30T19:57:49.334128+00:00",updatedAt:"2026-09-30T19:58:53.224288+00:00",mirrors:void 0},embeds:{SUB:[{server:"UPNShare",url:"https://animeav1.uns.bio/#vmwty1"},{server:"Voe",url:"https://voe.sx/e/kwrqe68eiej4"}]},downloads:{SUB:[{server:"TransferIt",url:"https://transfer.it/t/g7fmDSh1lRII"},{server:"Mega",url:"https://mega.nz/file/exJFVKRT#ErgedRDhoePVkaeNdtHSnCrGtm4dzxZR9Ru0YHbcnrc"},{server:"1Fichier",url:"https://1fichier.com/?y59reg8nh46dhf35t746"}]}},uses:{params:["number","slug"]}}],
+							form: null,
+							error: null
+						});
+					});
+				}
+			</script>
+		</div>
+	</body>
+</html>
