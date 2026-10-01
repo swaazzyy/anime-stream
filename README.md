@@ -4,7 +4,6 @@ Plataforma de streaming de anime con arquitectura **Cliente-Servidor** de alto r
 
 ---
 
-<<<<<<< HEAD
 ## 🌟 Características Principales
 
 ### 1. 🚀 Backend en Go (Alto Rendimiento y Conexión Fluida)
@@ -72,7 +71,6 @@ Plataforma de streaming de anime con arquitectura **Cliente-Servidor** de alto r
 ---
 
 =======
->>>>>>> e1ac2adf6387fb804ad5a41ba21b0adb74186efa
 ## 📁 Estructura del Proyecto
 
 ```
