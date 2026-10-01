@@ -1,9 +1,10 @@
 # 🎌 GoAnime FLV — Plataforma de Streaming de Anime en Go
 
-Plataforma de streaming de anime con arquitectura **Cliente-Servidor** de alto rendimiento escrita en **Go**, con base de datos **SQLite**, **motor BitTorrent integrado con protección Gluetun VPN (Kill Switch & Zero IP Leaks)** para descarga segura de capítulos, múltiples **servidores al estilo AnimeFLV y AnimeAV1** (UPNShare, Mega, Streamwish, Streamtape, YourUpload, Mp4Upload) y una interfaz moderna con tema oscuro inspirada en **Crunchyroll**.
+Plataforma de streaming de anime con arquitectura **Cliente-Servidor** de alto rendimiento escrita en **Go**, con base de datos **SQLite**, **motor BitTorrent integrado con protección Gluetun VPN (Kill Switch & Zero IP Leaks)** para descarga segura de capítulos, múltiples y una interfaz moderna con tema oscuro inspirada en **Crunchyroll**.
 
 ---
 
+<<<<<<< HEAD
 ## 🌟 Características Principales
 
 ### 1. 🚀 Backend en Go (Alto Rendimiento y Conexión Fluida)
@@ -70,6 +71,8 @@ Plataforma de streaming de anime con arquitectura **Cliente-Servidor** de alto r
 
 ---
 
+=======
+>>>>>>> e1ac2adf6387fb804ad5a41ba21b0adb74186efa
 ## 📁 Estructura del Proyecto
 
 ```
@@ -100,39 +103,6 @@ f:\anime-stream\
 │   └── vite.config.js   # Compilación directa hacia backend/dist
 └── README.md
 ```
-
----
-
-## 🔌 Endpoints de la API REST
-
-### Autenticación y Perfil
-| Método | Endpoint | Descripción | Requiere Auth |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/api/auth/register` | Registro de nuevo usuario | No |
-| `POST` | `/api/auth/login` | Inicio de sesión con usuario y contraseña | No |
-| `GET` | `/api/auth/me` | Obtener datos del usuario en sesión | Sí |
-| `PUT` | `/api/auth/profile` | Actualizar nombre de usuario y foto de perfil (avatar) | Sí |
-| `PUT` | `/api/auth/password` | Cambiar contraseña validando la contraseña actual | Sí |
-
-### Seguridad y VPN (Gluetun)
-| Método | Endpoint | Descripción | Requiere Auth |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/vpn/status` | Obtiene el estado del túnel Gluetun, IP pública de salida y país | No |
-
-### Catálogo y Episodios
-| Método | Endpoint | Descripción |
-| :--- | :--- | :--- |
-| `GET` | `/api/anime/catalog` | Obtener catálogo principal (tendencias, populares, mejor calificados) |
-| `GET` | `/api/anime/search` | Búsqueda filtrada por texto, género, categoría y estado |
-| `GET` | `/api/anime/{id}` | Detalles completos de un anime, ficha técnica y lista de episodios |
-| `GET` | `/api/anime/{id}/episode/{ep}` | Servidores y descargas para un episodio específico |
-
-### Seguimiento y Listas
-| Método | Endpoint | Descripción |
-| :--- | :--- | :--- |
-| `GET` / `POST` / `DELETE` | `/api/history` | Obtener, guardar o eliminar progreso de "Siguiendo Viendo" |
-| `GET` / `POST` / `DELETE` | `/api/watchlist` | Gestión de "Para el Futuro / Mi Lista" (por ver, viendo, completado) |
-| `GET` / `POST` | `/api/favorites` | Consultar y alternar animes favoritos |
 
 ---
 
