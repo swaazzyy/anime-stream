@@ -10,7 +10,6 @@ import {
   ChevronRight, 
   ArrowLeft, 
   Film, 
-  Calendar, 
   Tv, 
   Layers
 } from 'lucide-react';
@@ -163,6 +162,11 @@ export default function AnimeDetailPage({
         <img
           src={anime.banner || anime.poster}
           alt={anime.title}
+          onError={(e) => {
+            if (anime?.poster && e.currentTarget.src !== anime.poster) {
+              e.currentTarget.src = anime.poster;
+            }
+          }}
           className="w-full h-full object-cover object-center filter brightness-[0.55] transition-all duration-700"
         />
         {/* Soft edge gradients */}
@@ -334,9 +338,14 @@ export default function AnimeDetailPage({
                   {/* Thumbnail */}
                   <div className="relative aspect-video w-full overflow-hidden bg-black">
                     <img
-                      src={ep.thumbnail || anime.banner || anime.poster}
+                      src={ep.thumbnail || anime.poster || anime.banner}
                       alt={ep.title}
                       loading="lazy"
+                      onError={(e) => {
+                        if (anime?.poster && e.currentTarget.src !== anime.poster) {
+                          e.currentTarget.src = anime.poster;
+                        }
+                      }}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />

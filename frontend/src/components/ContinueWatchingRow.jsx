@@ -51,6 +51,11 @@ export default function ContinueWatchingRow({ history = [], onResume, onRemove, 
                 <img
                   src={item.anime_poster || item.thumbnail || item.poster || 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600'}
                   alt={item.anime_title}
+                  onError={(e) => {
+                    if (item.anime_poster && e.currentTarget.src !== item.anime_poster) {
+                      e.currentTarget.src = item.anime_poster;
+                    }
+                  }}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
 

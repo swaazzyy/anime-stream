@@ -1,6 +1,7 @@
 package api
 
 import (
+	"cmp"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -123,6 +124,93 @@ func HandleMe(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+type updateProfileReq struct {
+	Username string `json:"username"`
+	Avatar   string `json:"avatar"`
+}
+
+type updatePasswordReq struct {
+	CurrentPassword string `json:"current_password"`
+	NewPassword     string `json:"new_password"`
+}
+
+func HandleUpdateProfile(w http.ResponseWriter, r *http.Request) {
+	uid := userID(r)
+	if uid == 0 {
+		WriteError(w, http.StatusUnauthorized, "Debes iniciar sesión para editar tu perfil")
+		return
+	}
+
+	// Avatar is a URL or a client-compressed 256px JPEG data URL (~40 KB); cap it so the users table can't be stuffed.
+	const maxAvatar = 512 << 10
+	var req updateProfileReq
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxAvatar+4096)).Decode(&req); err != nil || len(req.Avatar) > maxAvatar {
+		WriteError(w, http.StatusBadRequest, "Datos de perfil inválidos o avatar demasiado grande")
+		return
+	}
+
+	req.Username = strings.TrimSpace(req.Username)
+	if req.Username == "" {
+		WriteError(w, http.StatusBadRequest, "El nombre de usuario no puede estar vacío")
+		return
+	}
+
+	user, err := database.UpdateUserProfile(uid, req.Username, req.Avatar)
+	if err != nil && strings.Contains(err.Error(), "UNIQUE") {
+		WriteError(w, http.StatusConflict, fmt.Sprintf("El nombre de usuario '%s' ya está en uso", req.Username))
+		return
+	}
+	if err != nil {
+		WriteError(w, http.StatusInternalServerError, "Error al guardar el perfil")
+		return
+	}
+
+	writeAuth(w, http.StatusOK, user)
+}
+
+func HandleUpdatePassword(w http.ResponseWriter, r *http.Request) {
+	uid := userID(r)
+	if uid == 0 {
+		WriteError(w, http.StatusUnauthorized, "Debes iniciar sesión para cambiar tu contraseña")
+		return
+	}
+
+	var req updatePasswordReq
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		WriteError(w, http.StatusBadRequest, "Datos inválidos")
+		return
+	}
+
+	if len(req.NewPassword) < 4 {
+		WriteError(w, http.StatusBadRequest, "La nueva contraseña debe tener al menos 4 caracteres")
+		return
+	}
+
+	user, err := database.GetUserByID(uid)
+	if err != nil {
+		WriteError(w, http.StatusNotFound, "Usuario no encontrado")
+		return
+	}
+
+	if !auth.CheckPasswordHash(req.CurrentPassword, user.Password) {
+		WriteError(w, http.StatusBadRequest, "La contraseña actual es incorrecta")
+		return
+	}
+
+	hash, err := auth.HashPassword(req.NewPassword)
+	if err != nil {
+		WriteError(w, http.StatusInternalServerError, "Error al procesar la nueva contraseña")
+		return
+	}
+
+	if err := database.UpdateUserPasswordHash(uid, hash); err != nil {
+		WriteError(w, http.StatusInternalServerError, "Error al guardar la nueva contraseña")
+		return
+	}
+
+	WriteJSON(w, http.StatusOK, map[string]string{"message": "Contraseña actualizada exitosamente"})
+}
+
 // Catalog & Anime Handlers
 func HandleCatalog(w http.ResponseWriter, r *http.Request) {
 	WriteJSON(w, http.StatusOK, providers.GetCatalogData())
@@ -195,9 +283,15 @@ func HandleGetEpisode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	thumbnail := anime.Banner
-	if strings.Contains(anime.Poster, "animeav1.com") {
-		thumbnail = anime.Poster
+	// Prefer the listed episode's thumbnail (looked up by number: lists may start at Episodio 0), then the CDN screenshot.
+	thumbnail := cmp.Or(anime.Poster, anime.Banner)
+	if mediaID := providers.ExtractMediaID(anime.Poster, anime.Banner); mediaID != "" {
+		thumbnail = fmt.Sprintf("%s/screenshots/%s/%d.jpg", providers.AnimeAV1CDNBase, mediaID, epNum)
+	}
+	for _, ep := range anime.Episodes {
+		if ep.Number == epNum && ep.Thumbnail != "" {
+			thumbnail = ep.Thumbnail
+		}
 	}
 	slug := anime.ID
 	if slug == "" {

@@ -22,9 +22,14 @@ export default function AnimeCard({
       {/* Poster Image Container */}
       <div className="relative aspect-[3/4] w-full overflow-hidden bg-black">
         <img
-          src={anime.poster}
+          src={anime.poster || anime.banner}
           alt={anime.title}
           loading="lazy"
+          onError={(e) => {
+            if (anime?.banner && e.currentTarget.src !== anime.banner) {
+              e.currentTarget.src = anime.banner;
+            }
+          }}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
 

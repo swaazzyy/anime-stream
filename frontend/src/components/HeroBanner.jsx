@@ -30,6 +30,11 @@ export default function HeroBanner({ slides = [], onWatchEpisode, onOpenDetails,
         <img
           src={current.banner || current.poster}
           alt={current.title}
+          onError={(e) => {
+            if (current?.poster && e.currentTarget.src !== current.poster) {
+              e.currentTarget.src = current.poster;
+            }
+          }}
           className="w-full h-full object-cover object-center filter brightness-[0.65] transition-all duration-700"
         />
         {/* Soft edge gradients */}

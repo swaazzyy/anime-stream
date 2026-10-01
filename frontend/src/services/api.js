@@ -41,6 +41,23 @@ export const api = {
     return raw ? JSON.parse(raw) : null;
   },
 
+  async updateProfile(profileData) {
+    const data = await request('/auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify(profileData),
+    });
+    if (data.token) localStorage.setItem('anime_token', data.token);
+    if (data.user) localStorage.setItem('anime_user', JSON.stringify(data.user));
+    return data;
+  },
+
+  updatePassword(passwordData) {
+    return request('/auth/password', {
+      method: 'PUT',
+      body: JSON.stringify(passwordData),
+    });
+  },
+
   // Catalog & Search
   getCatalog: () => request('/anime/catalog'),
   searchAnime: (query, filters = {}) => request(`/anime/search?${new URLSearchParams({ q: query, ...filters })}`),
@@ -69,4 +86,7 @@ export const api = {
   pauseTorrent: (id) => request(`/torrents/${id}/pause`, { method: 'POST' }),
   resumeTorrent: (id) => request(`/torrents/${id}/resume`, { method: 'POST' }),
   deleteTorrent: (id, deleteFile = false) => request(`/torrents/${id}?delete_file=${deleteFile}`, { method: 'DELETE' }),
+
+  // VPN & Gluetun Status
+  getVpnStatus: () => request('/vpn/status'),
 };

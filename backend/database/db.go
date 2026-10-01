@@ -16,6 +16,7 @@ type User struct {
 	ID        int64     `json:"id"`
 	Username  string    `json:"username"`
 	Email     string    `json:"email"`
+	Avatar    string    `json:"avatar"`
 	Password  string    `json:"-"`
 	CreatedAt time.Time `json:"created_at"`
 }
@@ -124,6 +125,9 @@ func InitDB(dbPath string) (*sql.DB, error) {
 		return nil, fmt.Errorf("failed to run database migrations: %w", err)
 	}
 
+	// Add avatar column if it doesn't exist
+	_, _ = db.Exec("ALTER TABLE users ADD COLUMN avatar TEXT DEFAULT '';")
+
 	// Clean up and normalize legacy non-slug IDs in watch_history and watchlist
 	_, _ = db.Exec(`UPDATE watch_history SET anime_id = 'sword-art-online-alicization-war-of-underworld' WHERE anime_id = '108759' OR anime_title LIKE '%Alicization%';`)
 	_, _ = db.Exec(`UPDATE watch_history SET anime_id = 'dororo' WHERE anime_id = 'accion' AND anime_title = 'Dororo';`)
@@ -154,8 +158,8 @@ func CreateUser(username, email, passwordHash string) (*User, error) {
 
 func getUser(column string, value any) (*User, error) {
 	var u User
-	err := DB.QueryRow("SELECT id, username, email, password_hash, created_at FROM users WHERE "+column+" = ?", value).
-		Scan(&u.ID, &u.Username, &u.Email, &u.Password, &u.CreatedAt)
+	err := DB.QueryRow("SELECT id, username, email, COALESCE(avatar, ''), password_hash, created_at FROM users WHERE "+column+" = ?", value).
+		Scan(&u.ID, &u.Username, &u.Email, &u.Avatar, &u.Password, &u.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -164,6 +168,19 @@ func getUser(column string, value any) (*User, error) {
 
 func GetUserByUsername(username string) (*User, error) { return getUser("username", username) }
 func GetUserByID(id int64) (*User, error)              { return getUser("id", id) }
+
+// UpdateUserProfile renames/re-avatars a user; a taken username fails on the users.username UNIQUE constraint.
+func UpdateUserProfile(userID int64, username, avatar string) (*User, error) {
+	if _, err := DB.Exec("UPDATE users SET username = ?, avatar = ? WHERE id = ?", username, avatar, userID); err != nil {
+		return nil, err
+	}
+	return GetUserByID(userID)
+}
+
+func UpdateUserPasswordHash(userID int64, passwordHash string) error {
+	_, err := DB.Exec("UPDATE users SET password_hash = ? WHERE id = ?", passwordHash, userID)
+	return err
+}
 
 // WatchHistory methods (Still Viewing / Continue Watching)
 func SaveWatchProgress(userID int64, h WatchHistory) error {

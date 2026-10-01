@@ -13,11 +13,11 @@ import {
   SkipForward,
   FastForward,
   Download, 
-  Server, 
   Bookmark,
   Check
 } from 'lucide-react';
 import { api } from '../services/api';
+import AnimeAV1Logo from './AnimeAV1Logo';
 
 export default function VideoPlayerModal({ 
   anime, 
@@ -302,7 +302,7 @@ export default function VideoPlayerModal({
         {/* Server Switcher Pill */}
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1 text-xs">
-            <Server className="w-3.5 h-3.5 text-[#f47521]" />
+            <AnimeAV1Logo className="w-4 h-3.5 flex-shrink-0" />
             <select
               value={selectedServer?.id || ''}
               onChange={(e) => {
@@ -599,8 +599,13 @@ export default function VideoPlayerModal({
                 {/* Thumbnail Preview */}
                 <div className="relative w-36 aspect-video rounded-lg overflow-hidden bg-black flex-shrink-0">
                   <img
-                    src={currentAnime.banner || currentAnime.poster}
+                    src={currentAnime.poster || currentAnime.banner}
                     alt={`Episodio ${episodeNum + 1}`}
+                    onError={(e) => {
+                      if (currentAnime.poster && e.currentTarget.src !== currentAnime.poster) {
+                        e.currentTarget.src = currentAnime.poster;
+                      }
+                    }}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">

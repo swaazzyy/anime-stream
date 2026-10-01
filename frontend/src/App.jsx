@@ -11,6 +11,8 @@ import DownloadCapModal from './components/DownloadCapModal';
 import DownloadsView from './components/DownloadsView';
 import MyListView from './components/MyListView';
 import AuthModal from './components/AuthModal';
+import UserProfileModal from './components/UserProfileModal';
+import GluetunModal from './components/GluetunModal';
 import { api } from './services/api';
 import { Flame, Search, Clock, Play, X } from 'lucide-react';
 
@@ -64,6 +66,9 @@ export default function App() {
   // Modals for actions
   const [downloadModalData, setDownloadModalData] = useState(null);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isVpnModalOpen, setIsVpnModalOpen] = useState(false);
+  const [vpnStatus, setVpnStatus] = useState(null);
 
   // Sync theme class to document
   useEffect(() => {
@@ -103,6 +108,16 @@ export default function App() {
     loadContinueWatching();
     loadWatchlist();
     loadTorrentsCount();
+    loadVpnStatus();
+  };
+
+  const loadVpnStatus = async () => {
+    try {
+      const status = await api.getVpnStatus();
+      setVpnStatus(status);
+    } catch (err) {
+      console.log("VPN status load:", err);
+    }
   };
 
   const loadCatalog = async () => {
@@ -272,6 +287,7 @@ export default function App() {
         onSearch={handleSearch}
         user={user}
         onOpenAuth={() => setIsAuthOpen(true)}
+        onOpenProfile={() => setIsProfileOpen(true)}
         onLogout={() => {
           api.logout();
           setUser(null);
@@ -279,6 +295,8 @@ export default function App() {
         }}
         continueWatchingCount={continueWatching.length}
         activeDownloadsCount={activeDownloadsCount}
+        vpnStatus={vpnStatus}
+        onOpenVpnModal={() => setIsVpnModalOpen(true)}
         theme={theme}
         onToggleTheme={toggleTheme}
       />
@@ -513,7 +531,12 @@ export default function App() {
 
             {/* Tab: TORRENT & DOWNLOADS */}
             {route.tab === 'downloads' && (
-              <DownloadsView onPlayLocalCap={handlePlayLocalCap} theme={theme} />
+              <DownloadsView 
+                onPlayLocalCap={handlePlayLocalCap} 
+                theme={theme}
+                vpnStatus={vpnStatus}
+                onOpenVpnModal={() => setIsVpnModalOpen(true)}
+              />
             )}
           </>
         )}
@@ -540,6 +563,34 @@ export default function App() {
           onAuthSuccess={(u) => {
             setUser(u);
             loadAllData();
+          }}
+          theme={theme}
+        />
+      )}
+
+      {/* 3. User Profile / Personalization Modal */}
+      {isProfileOpen && user && (
+        <UserProfileModal
+          user={user}
+          onClose={() => setIsProfileOpen(false)}
+          onUserUpdated={(u) => {
+            setUser(u);
+            loadAllData();
+          }}
+          theme={theme}
+          stats={{
+            watchlistCount: Object.keys(watchlistMap || {}).length,
+            continueCount: continueWatching.length,
+          }}
+        />
+      )}
+
+      {/* 4. Gluetun VPN Status & Configuration Modal */}
+      {isVpnModalOpen && (
+        <GluetunModal
+          onClose={() => {
+            setIsVpnModalOpen(false);
+            loadVpnStatus();
           }}
           theme={theme}
         />

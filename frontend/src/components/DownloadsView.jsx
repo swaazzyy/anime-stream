@@ -8,11 +8,18 @@ import {
   HardDrive,
   Plus,
   Wifi,
-  FileVideo
+  FileVideo,
+  ShieldCheck,
+  ShieldAlert
 } from 'lucide-react';
 import { api } from '../services/api';
 
-export default function DownloadsView({ onPlayLocalCap, theme = 'dark' }) {
+export default function DownloadsView({ 
+  onPlayLocalCap, 
+  theme = 'dark',
+  onOpenVpnModal,
+  vpnStatus
+}) {
   const isDark = theme === 'dark';
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -111,6 +118,49 @@ export default function DownloadsView({ onPlayLocalCap, theme = 'dark' }) {
             <span>Añadir Magnet</span>
           </button>
         </div>
+      </div>
+
+      {/* Gluetun VPN Protection Alert Banner */}
+      <div 
+        onClick={onOpenVpnModal}
+        className={`my-4 p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer transition-all ${
+          vpnStatus?.connected 
+            ? 'bg-emerald-950/20 border-emerald-500/30 hover:border-emerald-500/50 text-emerald-400' 
+            : 'bg-amber-950/20 border-amber-500/30 hover:border-amber-500/50 text-amber-300'
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <div className={`p-2 rounded-lg ${vpnStatus?.connected ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
+            {vpnStatus?.connected ? <ShieldCheck className="w-5 h-5" /> : <ShieldAlert className="w-5 h-5" />}
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-black text-xs uppercase tracking-wide">
+                {vpnStatus?.connected ? 'Túnel BitTorrent Protegido por Gluetun' : 'Tráfico BitTorrent sin protección VPN'}
+              </span>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${
+                vpnStatus?.connected ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'
+              }`}>
+                {vpnStatus?.connected ? 'Killswitch Activo' : 'IP Expuesta'}
+              </span>
+            </div>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {vpnStatus?.connected 
+                ? `IP pública protegida: ${vpnStatus?.public_ip || '---'} (${vpnStatus?.country || 'VPN'}, ${vpnStatus?.city || ''}) • Proveedor: ${vpnStatus?.provider || 'Gluetun'}`
+                : 'Conecta un contenedor Gluetun en Docker con tu proveedor VPN para descargar con anonimato total.'}
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onOpenVpnModal?.(); }}
+          className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+            vpnStatus?.connected ? 'bg-emerald-500 text-black hover:bg-emerald-400' : 'bg-amber-500 text-black hover:bg-amber-400'
+          }`}
+        >
+          {vpnStatus?.connected ? 'Ver Detalles VPN' : 'Configurar Gluetun'}
+        </button>
       </div>
 
       {/* Stats Summary Cards */}

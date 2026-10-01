@@ -61,6 +61,8 @@ func main() {
 	mux.HandleFunc("POST /api/auth/register", api.HandleRegister)
 	mux.HandleFunc("POST /api/auth/login", api.HandleLogin)
 	mux.HandleFunc("GET /api/auth/me", api.HandleMe)
+	mux.HandleFunc("PUT /api/auth/profile", api.HandleUpdateProfile)
+	mux.HandleFunc("PUT /api/auth/password", api.HandleUpdatePassword)
 
 	// Catalog & Anime routes
 	mux.HandleFunc("GET /api/anime/catalog", api.HandleCatalog)
@@ -72,6 +74,9 @@ func main() {
 	mux.HandleFunc("/api/history", api.HandleHistory)
 	mux.HandleFunc("/api/watchlist", api.HandleWatchlist)
 	mux.HandleFunc("/api/favorites", api.HandleFavorites)
+
+	// VPN & Gluetun status route
+	mux.HandleFunc("GET /api/vpn/status", api.HandleVPNStatus)
 
 	// 2. Initialize Torrent and Episode Download Engine; its routes exist only if it started
 	if torEngine, err := torrent.InitEngine(getenv("DOWNLOADS_DIR", "downloads")); err != nil {

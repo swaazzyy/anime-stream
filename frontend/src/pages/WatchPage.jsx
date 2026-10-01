@@ -14,12 +14,12 @@ import {
   SkipForward,
   FastForward,
   Download, 
-  Server, 
   Bookmark, 
   Layers,
   Check
 } from 'lucide-react';
 import { api } from '../services/api';
+import AnimeAV1Logo from '../components/AnimeAV1Logo';
 
 export default function WatchPage({
   slug,
@@ -52,6 +52,13 @@ export default function WatchPage({
   const playerContainerRef = useRef(null);
   const hideControlsTimeout = useRef(null);
   const lastSyncTime = useRef(0);
+
+  // Keep the Maximize/Minimize icon in sync (also when the user exits with Esc)
+  useEffect(() => {
+    const sync = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', sync);
+    return () => document.removeEventListener('fullscreenchange', sync);
+  }, []);
 
   // Load Anime details & Episode data concurrently
   useEffect(() => {
@@ -290,7 +297,7 @@ export default function WatchPage({
         <div className="flex items-center gap-2">
           {episodeData?.servers && episodeData.servers.length > 0 && (
             <div className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1 text-xs">
-              <Server className="w-3.5 h-3.5 text-[#f47521]" />
+              <AnimeAV1Logo className="w-4 h-3.5 flex-shrink-0" />
               <select
                 value={selectedServer?.id || ''}
                 onChange={(e) => {
@@ -590,8 +597,13 @@ export default function WatchPage({
               >
                 <div className="relative w-36 aspect-video rounded-lg overflow-hidden bg-black flex-shrink-0">
                   <img
-                    src={anime?.banner || anime?.poster}
+                    src={anime?.poster || anime?.banner}
                     alt={`Episodio ${episodeNum + 1}`}
+                    onError={(e) => {
+                      if (anime?.poster && e.currentTarget.src !== anime.poster) {
+                        e.currentTarget.src = anime.poster;
+                      }
+                    }}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -649,8 +661,13 @@ export default function WatchPage({
                 >
                   <div className="relative aspect-video w-full overflow-hidden bg-black">
                     <img
-                      src={ep.thumbnail || anime?.banner || anime?.poster}
+                      src={ep.thumbnail || anime?.poster || anime?.banner}
                       alt={ep.title}
+                      onError={(e) => {
+                        if (anime?.poster && e.currentTarget.src !== anime.poster) {
+                          e.currentTarget.src = anime.poster;
+                        }
+                      }}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                     <div className="absolute inset-0 bg-black/40" />

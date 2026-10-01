@@ -44,22 +44,6 @@ export default function DownloadCapModal({
   // Build clean options list
   const baseOptions = [
     {
-      name: 'Descargar Video Directo (MP4 a tu PC)',
-      type: 'direct_mp4',
-      quality: '1080p Full HD',
-      size: '450 MB',
-      url: 'https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-720p.mp4',
-      desc: 'Guarda el archivo de video .mp4 directamente en tu carpeta de Descargas.',
-    },
-    {
-      name: 'Descargar con Motor BitTorrent',
-      type: 'magnet',
-      quality: '1080p Full HD',
-      size: '450 MB',
-      url: magnetURI,
-      desc: 'Inicia la descarga en segundo plano en el gestor integrado.',
-    },
-    {
       name: 'Descargar Archivo .torrent',
       type: 'torrent_file',
       quality: '1080p',

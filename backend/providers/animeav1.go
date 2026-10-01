@@ -1033,6 +1033,19 @@ func standardDownloads(title, source string, epNum int) []DownloadOption {
 	}
 }
 
+var mediaIDRegex = regexp.MustCompile(`/(?:covers|backdrops|screenshots|thumbnails)/(\d+)`)
+
+// ExtractMediaID extracts the numeric AnimeAV1 media ID from cover, backdrop or screenshot URLs.
+// (A bare numeric anime ID is an AniList ID, not an AnimeAV1 one, so IDs are never used here.)
+func ExtractMediaID(urls ...string) string {
+	for _, u := range urls {
+		if m := mediaIDRegex.FindStringSubmatch(u); len(m) > 1 {
+			return m[1]
+		}
+	}
+	return ""
+}
+
 // GenerateAnimeAV1Episodes creates episodes list connected to AnimeAV1 without blocking network calls
 func GenerateAnimeAV1Episodes(a *Anime, total int) []Episode {
 	isMovie := a.Type == "Película" || strings.Contains(strings.ToLower(a.Type), "película") || strings.Contains(strings.ToLower(a.Type), "movie")
@@ -1047,14 +1060,17 @@ func GenerateAnimeAV1Episodes(a *Anime, total int) []Episode {
 		slug = Slugify(a.Title)
 	}
 
+	mediaID := ExtractMediaID(a.Poster, a.Banner)
+
 	episodes := make([]Episode, total)
 	for i := 1; i <= total; i++ {
-		thumbnail := fmt.Sprintf("%s/screenshots/%s/%d.jpg", AnimeAV1CDNBase, a.ID, i)
-		if isMovie || strings.HasPrefix(a.Banner, "http") {
+		thumbnail := a.Poster
+		if mediaID != "" && !isMovie {
+			thumbnail = fmt.Sprintf("%s/screenshots/%s/%d.jpg", AnimeAV1CDNBase, mediaID, i)
+		} else if isMovie && a.Poster != "" {
+			thumbnail = a.Poster
+		} else if a.Banner != "" && !strings.Contains(a.Banner, "cdn.animeav1.com/backdrops") {
 			thumbnail = a.Banner
-			if thumbnail == "" {
-				thumbnail = a.Poster
-			}
 		}
 		servers, downloads := GetDefaultEpisodeServers(slug, a.Title, i)
 
