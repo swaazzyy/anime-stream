@@ -4,30 +4,6 @@ Plataforma de streaming de anime con arquitectura **Cliente-Servidor** de alto r
 
 ---
 
-## 🌟 Características Principales
-
-### 1. 🚀 Backend en Go (Alto Rendimiento y Conexión Fluida)
-- Escrito completamente en Go sin dependencias de CGO (`modernc.org/sqlite`).
-- Servidor REST API ultrarrápido con soporte de streaming parcial por rangos HTTP (`Accept-Ranges: bytes` para reproducción fluida).
-- Autenticación segura mediante **JWT (JSON Web Tokens)** y contraseñas hasheadas con **bcrypt**.
-- Servidor estático integrado: sirve la aplicación frontend Single Page Application (SPA) directamente desde `http://localhost:8080`.
-
-### 2. 🗄️ Base de Datos SQLite Integrada (`anime_stream.db`)
-- **Gestión de usuarios**: Registro, login, perfiles y sesiones.
-- **"Siguiendo Viendo" (Still Viewing / Continue Watching)**: Guarda el segundo exacto de reproducción de cada anime y capítulo, duración total y estado de completado. Sincronización automática cada 5 segundos mientras el usuario mira el anime.
-- **"Para el Futuro / Mi Lista" (Watchlist)**: Organización por pestañas: *Por Ver (Para el Futuro)*, *Viendo (Siguiendo)*, *Completados* y *Favoritos*.
-- **Historial de descargas**: Registro de torrents y archivos descargados.
-
-### 3. ⚡ Motor BitTorrent Integrado & Descarga de Capítulos
-- Desarrollado sobre `github.com/anacrolix/torrent`.
-- **Botón de Descarga de Caps**: disponible en cada capítulo, tarjeta y en el reproductor.
-  - **⚡ Descargar vía BitTorrent (Magnet)**: añade la tarea directamente al motor de Go con reporte en tiempo real de velocidad (MB/s), porcentaje, peers y tamaño.
-  - **🌐 Descarga Directa (Mega / Servidores)**: descarga directa o redirección al archivo MP4.
-  - **📋 Copiar Magnet**: para usar en clientes externos si se desea.
-- **Reproducción Local de Caps**: una vez descargado el capítulo, puedes reproducirlo directamente en la aplicación desde el servidor local sin consumir ancho de banda de internet y con 0 buffering.
-
----
-
 ## 📁 Estructura del Proyecto
 
 ```
