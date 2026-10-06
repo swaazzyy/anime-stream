@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -30,7 +31,7 @@ var CuratedAnimeAV1 = []Anime{
 		Genres:        []string{"Drama", "Psicológico", "Seinen"},
 		Score:         8.6,
 		Status:        "En Emisión",
-		TotalEpisodes: 12,
+		TotalEpisodes: 1,
 		Year:          2024,
 		Type:          "TV Anime",
 		Studio:        "AnimeAV1",
@@ -45,7 +46,7 @@ var CuratedAnimeAV1 = []Anime{
 		Genres:        []string{"Acción", "Aventura", "Fantasía", "Shounen"},
 		Score:         8.9,
 		Status:        "En Emisión",
-		TotalEpisodes: 1120,
+		TotalEpisodes: 1180,
 		Year:          1999,
 		Type:          "TV Anime",
 		Studio:        "Toei Animation",
@@ -61,7 +62,7 @@ var CuratedAnimeAV1 = []Anime{
 		Genres:        []string{"Acción", "Aventura", "Fantasía", "Isekai"},
 		Score:         8.2,
 		Status:        "En Emisión",
-		TotalEpisodes: 12,
+		TotalEpisodes: 1,
 		Year:          2024,
 		Type:          "TV Anime",
 		Studio:        "C2C",
@@ -106,7 +107,7 @@ var CuratedAnimeAV1 = []Anime{
 		Genres:        []string{"Deportes", "Shounen"},
 		Score:         8.0,
 		Status:        "En Emisión",
-		TotalEpisodes: 13,
+		TotalEpisodes: 1,
 		Year:          2024,
 		Type:          "TV Anime",
 		Studio:        "M.S.C",
@@ -136,7 +137,7 @@ var CuratedAnimeAV1 = []Anime{
 		Genres:        []string{"Drama", "Misterio", "Suspenso", "Superpoderes"},
 		Score:         8.8,
 		Status:        "En Emisión",
-		TotalEpisodes: 8,
+		TotalEpisodes: 9,
 		Year:          2024,
 		Type:          "TV Anime",
 		Studio:        "LAN Studio",
@@ -152,7 +153,7 @@ var CuratedAnimeAV1 = []Anime{
 		Genres:        []string{"Acción", "Aventura", "Sobrenatural", "Shounen"},
 		Score:         9.0,
 		Status:        "En Emisión",
-		TotalEpisodes: 13,
+		TotalEpisodes: 8,
 		Year:          2024,
 		Type:          "TV Anime",
 		Studio:        "Pierrot",
@@ -227,7 +228,7 @@ var CuratedAnimeAV1 = []Anime{
 		Genres:        []string{"Acción", "Aventura", "Fantasía", "Ciencia Ficción"},
 		Score:         8.5,
 		Status:        "Finalizado",
-		TotalEpisodes: 23,
+		TotalEpisodes: 24,
 		Year:          2019,
 		Type:          "TV Anime",
 		Studio:        "A-1 Pictures",
@@ -650,7 +651,7 @@ func FetchAnimeAV1Filtered(q url.Values) ([]Anime, error) {
 
 		isMovie := catID == "2" || strings.Contains(strings.ToLower(title), "movie") || strings.Contains(strings.ToLower(title), "película")
 		animeType := av1Type(catID)
-		totalEps := 12
+		totalEps := 0
 		if isMovie {
 			animeType = "Película"
 			totalEps = 1
@@ -663,7 +664,7 @@ func FetchAnimeAV1Filtered(q url.Values) ([]Anime, error) {
 			Synopsis:      synopsis,
 			Poster:        fmt.Sprintf("%s/covers/%s.jpg", AnimeAV1CDNBase, rawID),
 			Banner:        fmt.Sprintf("%s/backdrops/%s.jpg", AnimeAV1CDNBase, rawID),
-			Score:         8.4,
+			Score:         0,
 			Status:        "En Emisión",
 			TotalEpisodes: totalEps,
 			Year:          2024,
@@ -685,7 +686,7 @@ func FetchAnimeAV1Filtered(q url.Values) ([]Anime, error) {
 		results = append(results, anime)
 	}
 
-	return results, nil
+	return EnrichAnimeWithRealDetails(results), nil
 }
 
 // FetchAnimeAV1Details extracts complete anime details from https://animeav1.com/media/{slug}
@@ -788,7 +789,6 @@ func FetchAnimeAV1Details(slugOrID string) (*Anime, error) {
 	var episodes []Episode
 	if isMovie {
 		// Movie has exactly 1 episode representing the whole movie
-		servers, downloads := GetDefaultEpisodeServers(slug, title, 1)
 		episodes = []Episode{
 			{
 				Number:    1,
@@ -796,8 +796,6 @@ func FetchAnimeAV1Details(slugOrID string) (*Anime, error) {
 				Thumbnail: fmt.Sprintf("%s/covers/%s.jpg", AnimeAV1CDNBase, mediaID),
 				Duration:  7200, // ~2 hours
 				Synopsis:  fmt.Sprintf("Película completa de %s transmitida en alta definición vía AnimeAV1.", title),
-				Servers:   servers,
-				Downloads: downloads,
 			},
 		}
 	} else {
@@ -819,15 +817,12 @@ func FetchAnimeAV1Details(slugOrID string) (*Anime, error) {
 						epTitle = "Episodio 0 (Prólogo / Especial)"
 					}
 					thumb := fmt.Sprintf("%s/screenshots/%s/%d.jpg", AnimeAV1CDNBase, mediaID, n)
-					servers, downloads := GetDefaultEpisodeServers(slug, title, n)
 					episodes = append(episodes, Episode{
 						Number:    n,
 						Title:     epTitle,
 						Thumbnail: thumb,
 						Duration:  1440,
 						Synopsis:  fmt.Sprintf("Capítulo %d de %s transmitido vía AnimeAV1.", n, title),
-						Servers:   servers,
-						Downloads: downloads,
 					})
 				}
 			}
@@ -858,6 +853,7 @@ func FetchAnimeAV1Details(slugOrID string) (*Anime, error) {
 		TrailerURL:    trailer,
 		Studio:        "AnimeAV1",
 		Episodes:      episodes,
+		fetchedAt:     time.Now(),
 	}
 	if !isMovie && len(episodes) > 0 && episodes[len(episodes)-1].Number >= 12 {
 		anime.Status = "En Emisión"
@@ -900,6 +896,16 @@ func ScrapeAnimeAV1Episode(slug string, epNum int) ([]Server, []DownloadOption, 
 		})
 	})
 
+	// Ensure Voe server is principal (first in list)
+	sort.SliceStable(servers, func(i, j int) bool {
+		isVoeI := strings.Contains(strings.ToLower(servers[i].Name), "voe") || strings.Contains(strings.ToLower(servers[i].URL), "voe")
+		isVoeJ := strings.Contains(strings.ToLower(servers[j].Name), "voe") || strings.Contains(strings.ToLower(servers[j].URL), "voe")
+		if isVoeI && !isVoeJ {
+			return true
+		}
+		return false
+	})
+
 	return servers, dlOptions, nil
 }
 
@@ -932,102 +938,44 @@ func forEachAV1Link(html, blockPattern string, fn func(lang, langTag, audio, nam
 	}
 }
 
-// GetDefaultEpisodeServers returns instant UPNShare and Voe servers matching AnimeAV1 structure
-func GetDefaultEpisodeServers(slug, title string, epNum int) ([]Server, []DownloadOption) {
-	servers := []Server{
-		{
-			ID:         "av1_upnshare_sub",
-			Name:       "AnimeAV1 • UPNShare [Sub]",
-			ServerType: "embed",
-			URL:        fmt.Sprintf("https://animeav1.uns.bio/#%s_ep%02d", slug, epNum),
-			Quality:    "1080p HD",
-			Audio:      "Sub Español",
-		},
-		{
-			ID:         "av1_voe_sub",
-			Name:       "AnimeAV1 • Voe [Sub]",
-			ServerType: "embed",
-			URL:        fmt.Sprintf("https://voe.sx/e/av1_%s_ep%02d", slug, epNum),
-			Quality:    "1080p HD",
-			Audio:      "Sub Español",
-		},
-		{
-			ID:         "av1_mp4upload_sub",
-			Name:       "AnimeAV1 • MP4Upload [Sub]",
-			ServerType: "embed",
-			URL:        fmt.Sprintf("https://www.mp4upload.com/embed-av1-%s-%02d.html", slug, epNum),
-			Quality:    "1080p HD",
-			Audio:      "Sub Español",
-		},
-	}
-
-	downloads := []DownloadOption{
-		{
-			Name:    "AnimeAV1 Directo (Mega) [Sub]",
-			Type:    "direct",
-			URL:     fmt.Sprintf("https://mega.nz/file/av1!%s!%d", slug, epNum),
-			Size:    "450 MB",
-			Quality: "1080p",
-			Audio:   "Sub Español",
-		},
-		{
-			Name:    "AnimeAV1 Directo (1Fichier) [Sub]",
-			Type:    "direct",
-			URL:     fmt.Sprintf("https://1fichier.com/?av1-%s-%d", slug, epNum),
-			Size:    "450 MB",
-			Quality: "1080p",
-			Audio:   "Sub Español",
-		},
-	}
-	return servers, append(downloads, standardDownloads(title, "AnimeAV1", epNum)...)
-}
-
 // GetLiveAnimeAV1Episode scrapes the live episode page for real embeds & downloads on demand
 func GetLiveAnimeAV1Episode(slug, title string, epNum int) ([]Server, []DownloadOption) {
 	// 1. Try scraping with provided slug
 	liveServers, liveDownloads, err := ScrapeAnimeAV1Episode(slug, epNum)
 	if err == nil && len(liveServers) > 0 {
-		return liveServers, append(liveDownloads, standardDownloads(title, "AnimeAV1", epNum)...)
+		return liveServers, append(liveDownloads, standardDownloads(title, epNum)...)
 	}
 
 	// 2. Try scraping with normalized title slug if different
 	if altSlug := Slugify(title); altSlug != "" && altSlug != slug {
 		if ls, ld, err := ScrapeAnimeAV1Episode(altSlug, epNum); err == nil && len(ls) > 0 {
-			return ls, append(ld, standardDownloads(title, "AnimeAV1", epNum)...)
+			return ls, append(ld, standardDownloads(title, epNum)...)
 		}
 	}
 
-	// 3. Fallback to standard AnimeAV1 servers (UPNShare, Voe, MP4Upload)
-	return GetDefaultEpisodeServers(slug, title, epNum)
+	// 3. No live servers: report none rather than made-up embed URLs that can't play
+	return nil, standardDownloads(title, epNum)
 }
 
-// standardDownloads are the sample MP4, magnet and .torrent options offered for every episode.
-func standardDownloads(title, source string, epNum int) []DownloadOption {
-	cleanTitle := url.QueryEscape(fmt.Sprintf("%s - %02d [1080p] [%s]", title, epNum, source))
+// standardDownloads are the sample AV1 video and .torrent options offered for every episode.
+func standardDownloads(title string, epNum int) []DownloadOption {
+	cleanTitle := url.QueryEscape(fmt.Sprintf("%s - %02d [AV1 1080p]", title, epNum))
 	magnetURI := fmt.Sprintf("magnet:?xt=urn:btih:3b245504fb5f3c478318134704090602f5eab35e&dn=%s&tr=http%%3A%%2F%%2Fnyaa.tracker.wf%%3A7777%%2Fannounce&tr=udp%%3A%%2F%%2Fopen.stealth.si%%3A80%%2Fannounce&tr=udp%%3A%%2F%%2Ftracker.opentrackr.org%%3A1337%%2Fannounce", cleanTitle)
 	return []DownloadOption{
 		{
-			Name:    "Descargar Video Directo (MP4)",
-			Type:    "direct_mp4",
-			URL:     "https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-720p.mp4",
-			Size:    "450 MB",
-			Quality: "1080p Full HD",
-			Audio:   "Sub Español",
-		},
-		{
-			Name:    "Descargar con Motor BitTorrent (Magnet)",
-			Type:    "magnet",
+			Name:    "Descargar Video en Formato AV1 (.av1)",
+			Type:    "av1_video",
 			URL:     magnetURI,
-			Size:    "450 MB",
-			Quality: "1080p Full HD",
+			Size:    "420 MB",
+			Quality: "1080p AV1",
 			Audio:   "Sub Español",
 		},
 		{
-			Name:    "Descargar Archivo .torrent",
+			Name:    "Descargar Archivo .torrent (.av1)",
 			Type:    "torrent_file",
 			URL:     fmt.Sprintf("/api/torrents/download-torrent-file?title=%s&episode=%d", url.QueryEscape(title), epNum),
 			Size:    "15 KB",
-			Quality: "1080p",
+			Quality: "1080p AV1",
 			Audio:   "Sub Español",
 		},
 	}
@@ -1049,15 +997,8 @@ func ExtractMediaID(urls ...string) string {
 // GenerateAnimeAV1Episodes creates episodes list connected to AnimeAV1 without blocking network calls
 func GenerateAnimeAV1Episodes(a *Anime, total int) []Episode {
 	isMovie := a.Type == "Película" || strings.Contains(strings.ToLower(a.Type), "película") || strings.Contains(strings.ToLower(a.Type), "movie")
-	if isMovie || total == 1 {
+	if isMovie || total <= 1 {
 		total = 1
-	} else if total <= 0 {
-		total = 12
-	}
-
-	slug := a.ID
-	if slug == "" {
-		slug = Slugify(a.Title)
 	}
 
 	mediaID := ExtractMediaID(a.Poster, a.Banner)
@@ -1072,7 +1013,6 @@ func GenerateAnimeAV1Episodes(a *Anime, total int) []Episode {
 		} else if a.Banner != "" && !strings.Contains(a.Banner, "cdn.animeav1.com/backdrops") {
 			thumbnail = a.Banner
 		}
-		servers, downloads := GetDefaultEpisodeServers(slug, a.Title, i)
 
 		titleText := fmt.Sprintf("Episodio %d", i)
 		durationSecs := 1440
@@ -1089,8 +1029,6 @@ func GenerateAnimeAV1Episodes(a *Anime, total int) []Episode {
 			Thumbnail: thumbnail,
 			Duration:  durationSecs,
 			Synopsis:  synopsisText,
-			Servers:   servers,
-			Downloads: downloads,
 		}
 	}
 	return episodes

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -211,9 +212,20 @@ func HandleUpdatePassword(w http.ResponseWriter, r *http.Request) {
 	WriteJSON(w, http.StatusOK, map[string]string{"message": "Contraseña actualizada exitosamente"})
 }
 
+// listView drops the episode lists that catalog rows and search grids never show (One Piece alone is 1000+ entries).
+func listView(list []providers.Anime) []providers.Anime {
+	out := slices.Clone(list)
+	for i := range out {
+		out[i].Episodes = nil
+	}
+	return out
+}
+
 // Catalog & Anime Handlers
 func HandleCatalog(w http.ResponseWriter, r *http.Request) {
-	WriteJSON(w, http.StatusOK, providers.GetCatalogData())
+	c := providers.GetCatalogData()
+	c.HeroSlides, c.Trending, c.Popular, c.TopRated = listView(c.HeroSlides), listView(c.Trending), listView(c.Popular), listView(c.TopRated)
+	WriteJSON(w, http.StatusOK, c)
 }
 
 func HandleSearchAnime(w http.ResponseWriter, r *http.Request) {
@@ -229,10 +241,25 @@ func HandleSearchAnime(w http.ResponseWriter, r *http.Request) {
 		WriteError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	WriteJSON(w, http.StatusOK, results)
+	WriteJSON(w, http.StatusOK, listView(results))
 }
 
 func resolveAnime(id string) (*providers.Anime, error) {
+	if torrent.GlobalEngine != nil {
+		if task := torrent.GlobalEngine.GetTaskByID(id); task != nil {
+			return &providers.Anime{
+				ID:            task.ID,
+				Title:         task.AnimeTitle,
+				Type:          "Descarga Local AV1",
+				Status:        "Finalizado",
+				TotalEpisodes: 1,
+				Episodes:      []providers.Episode{{Number: task.EpisodeNumber, Title: fmt.Sprintf("Episodio %d", task.EpisodeNumber)}}, // the one local file
+				Poster:        "https://cdn.animeav1.com/covers/4444.jpg",
+				Synopsis:      fmt.Sprintf("Episodio %d descargado localmente en formato AV1 (.av1).", task.EpisodeNumber),
+			}, nil
+		}
+	}
+
 	anime, err := providers.GetAnimeByID(id)
 	if err == nil && anime != nil {
 		return anime, nil
@@ -277,7 +304,31 @@ func HandleGetEpisode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	anime, err := resolveAnime(r.PathValue("id"))
+	id := r.PathValue("id")
+	if torrent.GlobalEngine != nil {
+		if task := torrent.GlobalEngine.GetTaskByID(id); task != nil {
+			episode := providers.Episode{
+				Number:    task.EpisodeNumber,
+				Title:     fmt.Sprintf("Episodio %d [Local AV1]", task.EpisodeNumber),
+				Thumbnail: "https://cdn.animeav1.com/screenshots/4444/1.jpg",
+				Duration:  1440,
+				Synopsis:  fmt.Sprintf("Capítulo reproducido desde el almacenamiento local en formato .av1 (%s).", task.Name),
+				Servers: []providers.Server{
+					{
+						ID:         "local_av1_server",
+						Name:       "Reproductor Local (.av1)",
+						ServerType: "direct",
+						URL:        fmt.Sprintf("/api/torrents/%s/stream", task.ID),
+						Quality:    "1080p AV1",
+					},
+				},
+			}
+			WriteJSON(w, http.StatusOK, episode)
+			return
+		}
+	}
+
+	anime, err := resolveAnime(id)
 	if err != nil {
 		WriteError(w, http.StatusNotFound, err.Error())
 		return
@@ -288,9 +339,11 @@ func HandleGetEpisode(w http.ResponseWriter, r *http.Request) {
 	if mediaID := providers.ExtractMediaID(anime.Poster, anime.Banner); mediaID != "" {
 		thumbnail = fmt.Sprintf("%s/screenshots/%s/%d.jpg", providers.AnimeAV1CDNBase, mediaID, epNum)
 	}
+	duration := 1440
 	for _, ep := range anime.Episodes {
-		if ep.Number == epNum && ep.Thumbnail != "" {
-			thumbnail = ep.Thumbnail
+		if ep.Number == epNum {
+			thumbnail = cmp.Or(ep.Thumbnail, thumbnail)
+			duration = cmp.Or(ep.Duration, duration) // movies are listed at 7200
 		}
 	}
 	slug := anime.ID
@@ -302,7 +355,7 @@ func HandleGetEpisode(w http.ResponseWriter, r *http.Request) {
 		Number:    epNum,
 		Title:     fmt.Sprintf("Episodio %d", epNum),
 		Thumbnail: thumbnail,
-		Duration:  1440,
+		Duration:  duration,
 		Synopsis:  fmt.Sprintf("Capítulo %d de %s transmitido vía AnimeAV1 con servidores Zilla Networks, MEGA, UPNShare y Voe.", epNum, anime.Title),
 		Servers:   servers,
 		Downloads: downloads,
@@ -435,8 +488,8 @@ func HandleTorrents(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if req.MagnetURI == "" {
-			WriteError(w, http.StatusBadRequest, "magnet_uri required")
-			return
+			cleanTitle := url.QueryEscape(fmt.Sprintf("%s - %02d [AV1 1080p]", req.AnimeTitle, req.EpisodeNumber))
+			req.MagnetURI = fmt.Sprintf("magnet:?xt=urn:btih:3b245504fb5f3c478318134704090602f5eab35e&dn=%s", cleanTitle)
 		}
 		task, err := torrent.GlobalEngine.AddMagnetTask(userID(r), req.AnimeTitle, req.EpisodeNumber, req.MagnetURI)
 		if err != nil {

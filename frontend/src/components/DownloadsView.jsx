@@ -6,27 +6,21 @@ import {
   Trash2,
   CheckCircle,
   HardDrive,
-  Plus,
   Wifi,
   FileVideo,
-  ShieldCheck,
-  ShieldAlert
+  RefreshCw,
+  Sparkles
 } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function DownloadsView({ 
   onPlayLocalCap, 
-  theme = 'dark',
-  onOpenVpnModal,
-  vpnStatus
+  theme = 'dark'
 }) {
   const isDark = theme === 'dark';
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [magnetInput, setMagnetInput] = useState('');
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [addTitle, setAddTitle] = useState('');
-  const [addEpisode, setAddEpisode] = useState(1);
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchTorrents = async () => {
     try {
@@ -36,6 +30,7 @@ export default function DownloadsView({
       console.error("Error loading torrents:", err);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -44,6 +39,11 @@ export default function DownloadsView({
     const interval = setInterval(fetchTorrents, 2000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchTorrents();
+  };
 
   const act = async (call) => {
     try {
@@ -55,26 +55,8 @@ export default function DownloadsView({
   };
 
   const handleDelete = (id) => {
-    if (confirm("¿Estás seguro de que quieres eliminar esta descarga?")) act(() => api.deleteTorrent(id, true));
-  };
-
-  const handleAddCustomMagnet = async (e) => {
-    e.preventDefault();
-    if (!magnetInput.trim()) return;
-
-    try {
-      await api.addDownload({
-        type: 'magnet',
-        magnet_uri: magnetInput.trim(),
-        anime_title: addTitle.trim() || 'GoAnime Torrent',
-        episode_number: parseInt(addEpisode) || 1,
-      });
-      setMagnetInput('');
-      setAddTitle('');
-      setShowAddModal(false);
-      fetchTorrents();
-    } catch (err) {
-      alert("Error al añadir magnet: " + err.message);
+    if (confirm("¿Estás seguro de que quieres eliminar esta descarga?")) {
+      act(() => api.deleteTorrent(id, true));
     }
   };
 
@@ -102,65 +84,31 @@ export default function DownloadsView({
             isDark ? 'text-white' : 'text-gray-900'
           }`}>
             <Download className="w-7 h-7 text-[#f47521]" />
-            <span>Gestor de Descargas & Torrents</span>
+            <span>Gestor de Descargas</span>
+            <span className="hidden sm:inline-flex items-center gap-1 text-xs px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30 font-bold">
+              <Sparkles className="w-3 h-3" /> Formato .AV1
+            </span>
           </h1>
           <p className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            Descarga y gestiona episodios completos de GoAnime para ver sin conexión
+            Descarga y visualización de episodios en formato AV1 (.av1) para ver sin conexión
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#f47521] hover:bg-[#ff8c3b] text-black font-extrabold text-sm transition-all shadow-md shadow-[#f47521]/20 active:scale-95"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all border ${
+              isDark 
+                ? 'bg-[#14151a] border-[#23252b] hover:border-[#353846] text-gray-300 hover:text-white' 
+                : 'bg-white border-gray-200 hover:border-gray-300 text-gray-700 shadow-sm'
+            }`}
+            title="Actualizar lista de descargas"
           >
-            <Plus className="w-4 h-4" />
-            <span>Añadir Magnet</span>
+            <RefreshCw className={`w-3.5 h-3.5 text-[#f47521] ${refreshing ? 'animate-spin' : ''}`} />
+            <span>Actualizar</span>
           </button>
         </div>
-      </div>
-
-      {/* Gluetun VPN Protection Alert Banner */}
-      <div 
-        onClick={onOpenVpnModal}
-        className={`my-4 p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer transition-all ${
-          vpnStatus?.connected 
-            ? 'bg-emerald-950/20 border-emerald-500/30 hover:border-emerald-500/50 text-emerald-400' 
-            : 'bg-amber-950/20 border-amber-500/30 hover:border-amber-500/50 text-amber-300'
-        }`}
-      >
-        <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-lg ${vpnStatus?.connected ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
-            {vpnStatus?.connected ? <ShieldCheck className="w-5 h-5" /> : <ShieldAlert className="w-5 h-5" />}
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-black text-xs uppercase tracking-wide">
-                {vpnStatus?.connected ? 'Túnel BitTorrent Protegido por Gluetun' : 'Tráfico BitTorrent sin protección VPN'}
-              </span>
-              <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${
-                vpnStatus?.connected ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'
-              }`}>
-                {vpnStatus?.connected ? 'Killswitch Activo' : 'IP Expuesta'}
-              </span>
-            </div>
-            <p className="text-xs text-gray-400 mt-0.5">
-              {vpnStatus?.connected 
-                ? `IP pública protegida: ${vpnStatus?.public_ip || '---'} (${vpnStatus?.country || 'VPN'}, ${vpnStatus?.city || ''}) • Proveedor: ${vpnStatus?.provider || 'Gluetun'}`
-                : 'Conecta un contenedor Gluetun en Docker con tu proveedor VPN para descargar con anonimato total.'}
-            </p>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onOpenVpnModal?.(); }}
-          className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-            vpnStatus?.connected ? 'bg-emerald-500 text-black hover:bg-emerald-400' : 'bg-amber-500 text-black hover:bg-amber-400'
-          }`}
-        >
-          {vpnStatus?.connected ? 'Ver Detalles VPN' : 'Configurar Gluetun'}
-        </button>
       </div>
 
       {/* Stats Summary Cards */}
@@ -184,7 +132,7 @@ export default function DownloadsView({
             <CheckCircle className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs text-gray-400 font-semibold uppercase">Capítulos Listos</p>
+            <p className="text-xs text-gray-400 font-semibold uppercase">Listos para Ver (.av1)</p>
             <h3 className={`text-2xl font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>{completedDownloads.length}</h3>
           </div>
         </div>
@@ -196,7 +144,7 @@ export default function DownloadsView({
             <HardDrive className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs text-gray-400 font-semibold uppercase">Total Descargas</p>
+            <p className="text-xs text-gray-400 font-semibold uppercase">Total Descargas (.av1)</p>
             <h3 className={`text-2xl font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>{tasks.length}</h3>
           </div>
         </div>
@@ -215,7 +163,7 @@ export default function DownloadsView({
           <Download className="w-12 h-12 text-gray-400 mx-auto mb-3" />
           <h3 className={`text-lg font-bold ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>No hay descargas activas ni guardadas</h3>
           <p className={`text-sm mt-1 max-w-md mx-auto ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
-            Puedes descargar cualquier capítulo haciendo clic en el botón "Descargar Cap" en el reproductor o desde la lista de episodios de GoAnime.
+            Puedes iniciar la descarga de cualquier capítulo en formato AV1 (.av1) haciendo clic en el botón "Descargar Cap" en el reproductor o en la ficha del anime.
           </p>
         </div>
       ) : (
@@ -247,18 +195,21 @@ export default function DownloadsView({
                       }`}>
                         {task.name}
                       </h4>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                        .AV1
+                      </span>
                       <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider ${
                         isCompleted ? 'bg-green-500/20 text-green-500' :
-                        isPaused ? 'bg-yellow-500/20 text-yellow-600' :
+                        isPaused ? 'bg-yellow-500/20 text-yellow-500' :
                         isError ? 'bg-red-500/20 text-red-500' :
                         'bg-[#f47521]/20 text-[#f47521]'
                       }`}>
-                        {task.status}
+                        {isCompleted ? 'COMPLETADO' : isPaused ? 'PAUSADO' : isError ? 'ERROR' : 'DESCARGANDO'}
                       </span>
                     </div>
 
                     {/* Progress Bar */}
-                    <div className={`w-full h-2 rounded-full overflow-hidden mt-2.5 ${
+                    <div className={`w-full h-2.5 rounded-full overflow-hidden mt-2.5 ${
                       isDark ? 'bg-[#23252b]' : 'bg-gray-200'
                     }`}>
                       <div
@@ -271,7 +222,9 @@ export default function DownloadsView({
 
                     {/* Speed and Size info */}
                     <div className="flex items-center gap-4 text-xs text-gray-400 mt-1.5 flex-wrap">
-                      <span>{task.progress ? task.progress.toFixed(1) : 0}%</span>
+                      <span className="font-bold text-[#f47521]">
+                        {task.progress ? task.progress.toFixed(1) : (isCompleted ? '100.0' : '0.0')}%
+                      </span>
                       <span>{formatBytes(task.downloaded_bytes)} / {formatBytes(task.size_bytes)}</span>
                       {!isCompleted && !isPaused && task.download_speed && (
                         <span className="text-[#f47521] font-semibold flex items-center gap-1">
@@ -322,86 +275,6 @@ export default function DownloadsView({
               </div>
             );
           })}
-        </div>
-      )}
-
-      {/* Modal: Add Magnet */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
-          <div className={`w-full max-w-md rounded-2xl border p-6 shadow-2xl ${
-            isDark ? 'bg-[#14151a] border-[#23252b] text-white' : 'bg-white border-gray-200 text-gray-900'
-          }`}>
-            <h3 className="text-lg font-black mb-1">Añadir Magnet de Torrent</h3>
-            <p className={`text-xs mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              Pega cualquier enlace magnet para iniciar la descarga del capítulo.
-            </p>
-
-            <form onSubmit={handleAddCustomMagnet} className="space-y-3">
-              <div>
-                <label className={`block text-xs font-semibold mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Título del Anime
-                </label>
-                <input
-                  type="text"
-                  placeholder="ej. Solo Leveling"
-                  value={addTitle}
-                  onChange={(e) => setAddTitle(e.target.value)}
-                  className={`w-full px-3 py-2 rounded-lg text-sm border focus:outline-none focus:border-[#f47521] ${
-                    isDark ? 'bg-[#1e2029] border-[#2b2e3b] text-white' : 'bg-gray-50 border-gray-300 text-gray-900'
-                  }`}
-                />
-              </div>
-
-              <div>
-                <label className={`block text-xs font-semibold mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Número de Episodio
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  value={addEpisode}
-                  onChange={(e) => setAddEpisode(e.target.value)}
-                  className={`w-full px-3 py-2 rounded-lg text-sm border focus:outline-none focus:border-[#f47521] ${
-                    isDark ? 'bg-[#1e2029] border-[#2b2e3b] text-white' : 'bg-gray-50 border-gray-300 text-gray-900'
-                  }`}
-                />
-              </div>
-
-              <div>
-                <label className={`block text-xs font-semibold mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Magnet URI
-                </label>
-                <textarea
-                  rows={3}
-                  required
-                  placeholder="magnet:?xt=urn:btih:..."
-                  value={magnetInput}
-                  onChange={(e) => setMagnetInput(e.target.value)}
-                  className={`w-full px-3 py-2 rounded-lg text-xs font-mono border focus:outline-none focus:border-[#f47521] ${
-                    isDark ? 'bg-[#1e2029] border-[#2b2e3b] text-white' : 'bg-gray-50 border-gray-300 text-gray-900'
-                  }`}
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className={`px-4 py-2 rounded-lg text-xs font-bold ${
-                    isDark ? 'bg-[#1e2029] text-gray-300 hover:text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 rounded-lg bg-[#f47521] hover:bg-[#ff8c3b] text-black font-extrabold text-xs shadow-md shadow-[#f47521]/20"
-                >
-                  Iniciar Descarga
-                </button>
-              </div>
-            </form>
-          </div>
         </div>
       )}
     </div>

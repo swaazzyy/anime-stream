@@ -157,7 +157,7 @@ func convertMediaToAnime(m *anilistMedia) Anime {
 
 	eps := m.Episodes
 	if eps <= 0 {
-		eps = 12
+		eps = 1
 	}
 
 	// Build episodes with exported images
@@ -180,7 +180,6 @@ func convertMediaToAnime(m *anilistMedia) Anime {
 		}
 	}
 
-	slug := Slugify(m.Title.Romaji)
 	for i := 1; i <= totalEps; i++ {
 		epThumbnail := banner
 		if img, ok := streamImgMap[i]; ok {
@@ -195,17 +194,12 @@ func convertMediaToAnime(m *anilistMedia) Anime {
 			epTitle = t
 		}
 
-		// Generate AnimeFLV servers with embed stream links
-		servers, downloads := GetAnimeFLVEpisodeServers(slug, m.Title.Romaji, i)
-
 		episodes = append(episodes, Episode{
 			Number:    i,
 			Title:     epTitle,
 			Thumbnail: epThumbnail,
 			Duration:  1440,
-			Synopsis:  fmt.Sprintf("Capítulo %d de %s en audio japonés con subtítulos al español. Servidores disponibles: Streamwish, Mega, Streamtape, YourUpload, Mp4Upload.", i, title),
-			Servers:   servers,
-			Downloads: downloads,
+			Synopsis:  fmt.Sprintf("Capítulo %d de %s en audio japonés con subtítulos al español.", i, title),
 		})
 	}
 

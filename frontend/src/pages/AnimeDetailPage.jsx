@@ -117,7 +117,8 @@ export default function AnimeDetailPage({
     );
   }
 
-  const isMovie = anime.type?.toLowerCase().includes('película') || anime.type?.toLowerCase().includes('movie') || anime.total_episodes === 1;
+  // By type only: a series that has aired a single episode so far is not a movie.
+  const isMovie = anime.type?.toLowerCase().includes('película') || anime.type?.toLowerCase().includes('movie');
   const episodes = anime.episodes || [];
   const firstEpNum = episodes.length > 0 ? episodes[0].number : 1;
 
@@ -128,7 +129,7 @@ export default function AnimeDetailPage({
         thumbnail: anime.banner || anime.poster,
         synopsis: anime.synopsis || 'Película completa en alta definición.',
       }])
-    : (episodes.length > 0 ? episodes : Array.from({ length: Math.min(anime.total_episodes || 12, 24) }, (_, i) => ({
+    : (episodes.length > 0 ? episodes : Array.from({ length: Math.max(1, anime.total_episodes || 1) }, (_, i) => ({
         number: i + 1,
         title: `Episodio ${i + 1}`,
         thumbnail: anime.poster,
@@ -158,7 +159,7 @@ export default function AnimeDetailPage({
       </div>
 
       {/* Cinematic Backdrop Hero Banner */}
-      <div className="relative w-full h-[340px] sm:h-[420px] md:h-[480px] overflow-hidden bg-black select-none border-b border-[#23252b]">
+      <div className="relative w-full min-h-[380px] sm:min-h-[440px] md:min-h-[480px] overflow-hidden bg-black select-none border-b border-[#23252b] flex items-end">
         <img
           src={anime.banner || anime.poster}
           alt={anime.title}
@@ -167,18 +168,18 @@ export default function AnimeDetailPage({
               e.currentTarget.src = anime.poster;
             }
           }}
-          className="w-full h-full object-cover object-center filter brightness-[0.55] transition-all duration-700"
+          className="absolute inset-0 w-full h-full object-cover object-center filter brightness-[0.38] transition-all duration-700 pointer-events-none"
         />
         {/* Soft edge gradients */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0b0c0e] via-[#0b0c0e]/60 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0b0c0e] via-[#0b0c0e]/80 to-transparent w-full md:w-3/4" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0b0c0e] via-[#0b0c0e]/75 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0b0c0e] via-[#0b0c0e]/85 to-transparent w-full md:w-3/4 pointer-events-none" />
 
         {/* Content Inside Banner */}
-        <div className="relative max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex flex-col justify-end pb-8 z-10">
+        <div className="relative max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 z-10">
           <div className="flex flex-col sm:flex-row sm:items-end gap-6">
             
             {/* Poster thumbnail */}
-            <div className="hidden sm:block w-36 md:w-44 aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 flex-shrink-0 bg-black">
+            <div className="w-32 sm:w-40 md:w-44 aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 flex-shrink-0 bg-black">
               <img
                 src={anime.poster}
                 alt={anime.title}
@@ -190,10 +191,12 @@ export default function AnimeDetailPage({
             <div className="flex-grow min-w-0">
               {/* Badges */}
               <div className="flex items-center gap-2 mb-2 flex-wrap">
-                <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#f47521] text-black font-black text-xs shadow-md">
-                  <Star className="w-3.5 h-3.5 fill-black" />
-                  {anime.score ? anime.score.toFixed(1) : '8.8'}
-                </span>
+                {anime.score > 0 && (
+                  <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#f47521] text-black font-black text-xs shadow-md">
+                    <Star className="w-3.5 h-3.5 fill-black" />
+                    {anime.score.toFixed(1)}
+                  </span>
+                )}
                 <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
                   isMovie ? 'bg-purple-900/80 border border-purple-500/40 text-purple-200' : 'bg-black/60 border border-white/10 text-white'
                 }`}>
@@ -203,8 +206,13 @@ export default function AnimeDetailPage({
                   {anime.status || (isMovie ? 'Finalizado' : 'En Emisión')}
                 </span>
                 <span className="px-2.5 py-0.5 rounded-full bg-black/60 border border-white/10 text-xs text-gray-300">
-                  {anime.year || '2024'}
+                  {isMovie ? '1 Episodio' : (anime.total_episodes === 1 ? '1 Episodio' : `${anime.total_episodes || episodeList.length} Episodios`)}
                 </span>
+                {anime.year && (
+                  <span className="px-2.5 py-0.5 rounded-full bg-black/60 border border-white/10 text-xs text-gray-300">
+                    {anime.year}
+                  </span>
+                )}
               </div>
 
               {/* Title */}
@@ -212,13 +220,20 @@ export default function AnimeDetailPage({
                 {anime.title}
               </h1>
               {anime.japanese_title && (
-                <p className="text-sm sm:text-base text-gray-400 font-medium italic mb-4">
+                <p className="text-sm sm:text-base text-gray-400 font-medium italic mb-2">
                   {anime.japanese_title}
                 </p>
               )}
 
+              {/* Little Description (Synopsis) */}
+              {anime.synopsis && (
+                <p className="text-xs sm:text-sm text-gray-300 line-clamp-3 md:line-clamp-4 max-w-3xl leading-relaxed mb-4 drop-shadow-sm font-medium">
+                  {anime.synopsis}
+                </p>
+              )}
+
               {/* Action Buttons */}
-              <div className="flex items-center gap-3 flex-wrap mt-4">
+              <div className="flex items-center gap-3 flex-wrap mt-2">
                 <button
                   onClick={() => onNavigate(`/media/${anime.id}/${firstEpNum}`)}
                   className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#f47521] hover:bg-[#ff8c3b] text-black font-black text-sm transition-all shadow-lg shadow-[#f47521]/30 hover:scale-105 active:scale-95 cursor-pointer"
@@ -388,7 +403,7 @@ export default function AnimeDetailPage({
                         title="Descargar capítulo"
                         onClick={(e) => {
                           e.stopPropagation();
-                          onDownloadCap?.(anime, ep.number, ep.downloads);
+                          onDownloadCap?.(anime, ep.number); // the modal fetches the episode's live mirrors
                         }}
                         className={`p-1.5 rounded-lg transition-colors ${
                           isDark ? 'hover:bg-[#23252b] hover:text-[#f47521]' : 'hover:bg-gray-100 hover:text-[#f47521]'

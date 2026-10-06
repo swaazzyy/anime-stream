@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -48,6 +49,7 @@ type Engine struct {
 	client  *torrent.Client
 	dataDir string
 	tasks   map[string]*DownloadTask
+	seq     int // task ID counter
 	mu      sync.RWMutex
 	ctx     context.Context
 	cancel  context.CancelFunc
@@ -96,8 +98,10 @@ func (e *Engine) AddMagnetTask(userID int64, animeTitle string, episodeNum int, 
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
-	taskID := fmt.Sprintf("tor-%d-%s-%d-%d", userID, sanitizeFilename(animeTitle), episodeNum, time.Now().Unix())
-	fileName := fmt.Sprintf("%s_Ep%02d.mp4", sanitizeFilename(animeTitle), episodeNum)
+	// URL-safe and unique: the ID ends up in /api/torrents/{id} and /media/{id} paths.
+	e.seq++
+	taskID := fmt.Sprintf("tor-%d-%d", time.Now().Unix(), e.seq)
+	fileName := fmt.Sprintf("%s_Ep%02d.av1", sanitizeFilename(animeTitle), episodeNum)
 	savePath := filepath.Join(e.dataDir, fileName)
 
 	ctx, cancel := context.WithCancel(e.ctx)
@@ -105,14 +109,14 @@ func (e *Engine) AddMagnetTask(userID int64, animeTitle string, episodeNum int, 
 	task := &DownloadTask{
 		ID:            taskID,
 		UserID:        userID,
-		Name:          fmt.Sprintf("%s - Episodio %02d [AnimeFLV Cap]", animeTitle, episodeNum),
+		Name:          fmt.Sprintf("%s - Episodio %02d [AV1 1080p]", animeTitle, episodeNum),
 		AnimeTitle:    animeTitle,
 		EpisodeNumber: episodeNum,
 		MagnetURI:     magnetURI,
 		Status:        "downloading",
 		CreatedAt:     time.Now(),
 		SavePath:      savePath,
-		SizeBytes:     450 * 1024 * 1024, // 450 MB typical 1080p anime cap
+		SizeBytes:     420 * 1024 * 1024, // 420 MB typical 1080p AV1 anime cap
 		cancelFunc:    cancel,
 	}
 
@@ -144,7 +148,8 @@ func (e *Engine) AddMagnetTask(userID int64, animeTitle string, episodeNum int, 
 	}
 
 	e.tasks[task.ID] = task
-	return task, nil
+	snapshot := *task
+	return &snapshot, nil
 }
 
 // runActiveDownloadFallback handles downloading a valid sample video into the file so it can be streamed locally
@@ -154,14 +159,20 @@ func (e *Engine) runActiveDownloadFallback(ctx context.Context, task *DownloadTa
 		"https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_1MB.mp4",
 		"https://raw.githubusercontent.com/intel-iot-devkit/sample-videos/master/person-bicycle-car-detection.mp4",
 	}
-	url := sampleURLs[(task.EpisodeNumber-1)%len(sampleURLs)]
+	url := sampleURLs[max(task.EpisodeNumber-1, 0)%len(sampleURLs)] // episode 0 must not index -1
 	e.runDirectDownload(ctx, task, url)
 }
 
 func (e *Engine) runDirectDownload(ctx context.Context, task *DownloadTask, url string) {
+	fail := func(msg string) {
+		if ctx.Err() == nil { // after Pause/Delete the error is just the cancellation
+			e.setTaskError(task.ID, msg)
+		}
+	}
+
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
-		e.setTaskError(task.ID, err.Error())
+		fail(err.Error())
 		return
 	}
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
@@ -169,13 +180,13 @@ func (e *Engine) runDirectDownload(ctx context.Context, task *DownloadTask, url 
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		e.setTaskError(task.ID, err.Error())
+		fail(err.Error())
 		return
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusPartialContent {
-		e.setTaskError(task.ID, fmt.Sprintf("HTTP status %d", resp.StatusCode))
+		fail(fmt.Sprintf("HTTP status %d", resp.StatusCode))
 		return
 	}
 
@@ -191,7 +202,7 @@ func (e *Engine) runDirectDownload(ctx context.Context, task *DownloadTask, url 
 
 	outFile, err := os.Create(task.SavePath)
 	if err != nil {
-		e.setTaskError(task.ID, err.Error())
+		fail(err.Error())
 		return
 	}
 	defer outFile.Close()
@@ -202,60 +213,50 @@ func (e *Engine) runDirectDownload(ctx context.Context, task *DownloadTask, url 
 	lastTime := time.Now()
 
 	for {
-		select {
-		case <-ctx.Done():
-			e.mu.Lock()
-			task.Status = "paused"
-			task.DownloadSpeed = "0 KB/s"
-			e.mu.Unlock()
-			return
-		default:
-			n, readErr := resp.Body.Read(buf)
-			if n > 0 {
-				_, writeErr := outFile.Write(buf[:n])
-				if writeErr != nil {
-					e.setTaskError(task.ID, writeErr.Error())
-					return
-				}
-				downloaded += int64(n)
-
-				now := time.Now()
-				elapsed := now.Sub(lastTime).Seconds()
-				if elapsed >= 0.5 {
-					speed := float64(downloaded-lastDownloaded) / elapsed
-					e.mu.Lock()
-					task.DownloadedBytes = downloaded
-					task.SpeedBytesPerSec = int64(speed)
-					task.DownloadSpeed = formatSpeed(speed)
-					if task.SizeBytes > 0 {
-						task.Progress = float64(downloaded) / float64(task.SizeBytes) * 100.0
-						if task.Progress > 100.0 {
-							task.Progress = 100.0
-						}
-					}
-					e.mu.Unlock()
-					lastDownloaded = downloaded
-					lastTime = now
-				}
-			}
-
-			if readErr != nil {
-				if readErr == io.EOF {
-					now := time.Now()
-					e.mu.Lock()
-					task.DownloadedBytes = downloaded
-					task.SizeBytes = downloaded
-					task.Progress = 100.0
-					task.Status = "completed"
-					task.DownloadSpeed = "0 KB/s"
-					task.CompletedAt = &now
-					e.mu.Unlock()
-					log.Printf("Torrent download completed: %s", task.Name)
-					return
-				}
-				e.setTaskError(task.ID, readErr.Error())
+		n, readErr := resp.Body.Read(buf)
+		if ctx.Err() != nil {
+			return // paused or deleted: PauseTask/DeleteTask already updated the task; a resume restarts the file
+		}
+		if n > 0 {
+			if _, writeErr := outFile.Write(buf[:n]); writeErr != nil {
+				fail(writeErr.Error())
 				return
 			}
+			downloaded += int64(n)
+
+			now := time.Now()
+			elapsed := now.Sub(lastTime).Seconds()
+			if elapsed >= 0.5 {
+				speed := float64(downloaded-lastDownloaded) / elapsed
+				e.mu.Lock()
+				task.DownloadedBytes = downloaded
+				task.SpeedBytesPerSec = int64(speed)
+				task.DownloadSpeed = formatSpeed(speed)
+				if task.SizeBytes > 0 {
+					task.Progress = min(float64(downloaded)/float64(task.SizeBytes)*100.0, 100.0)
+				}
+				e.mu.Unlock()
+				lastDownloaded = downloaded
+				lastTime = now
+			}
+		}
+
+		if readErr == io.EOF {
+			now := time.Now()
+			e.mu.Lock()
+			task.DownloadedBytes = downloaded
+			task.SizeBytes = downloaded
+			task.Progress = 100.0
+			task.Status = "completed"
+			task.DownloadSpeed = "0 KB/s"
+			task.CompletedAt = &now
+			e.mu.Unlock()
+			log.Printf("Torrent download completed: %s", task.Name)
+			return
+		}
+		if readErr != nil {
+			fail(readErr.Error())
+			return
 		}
 	}
 }
@@ -306,7 +307,7 @@ func (e *Engine) statsWorker() {
 
 // GenerateTorrentFileContent creates a standard bencoded .torrent file byte stream
 func GenerateTorrentFileContent(animeTitle string, episodeNum int) ([]byte, string, error) {
-	cleanName := fmt.Sprintf("%s_Ep%02d.mp4", sanitizeFilename(animeTitle), episodeNum)
+	cleanName := fmt.Sprintf("%s_Ep%02d.av1", sanitizeFilename(animeTitle), episodeNum)
 	trackers := [][]string{
 		{"http://nyaa.tracker.wf:7777/announce"},
 		{"udp://tracker.opentrackr.org:1337/announce"},
@@ -318,7 +319,7 @@ func GenerateTorrentFileContent(animeTitle string, episodeNum int) ([]byte, stri
 		PieceLength: 256 * 1024,
 		Pieces:      make([]byte, 20), // mock 20-byte sha1
 		Name:        cleanName,
-		Length:      450 * 1024 * 1024,
+		Length:      420 * 1024 * 1024,
 	}
 
 	infoBytes, err := bencode.Marshal(info)
@@ -343,23 +344,29 @@ func GenerateTorrentFileContent(animeTitle string, episodeNum int) ([]byte, stri
 	return []byte(buf.String()), fmt.Sprintf("%s_Ep%02d.torrent", sanitizeFilename(animeTitle), episodeNum), nil
 }
 
-// GetAllTasks returns all torrent and cap download tasks
-func (e *Engine) GetAllTasks() []*DownloadTask {
+// GetAllTasks returns snapshots of all tasks, newest first. They are copies: download goroutines keep
+// mutating the live tasks, so encoding those outside the lock would race.
+func (e *Engine) GetAllTasks() []DownloadTask {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
 
-	list := make([]*DownloadTask, 0, len(e.tasks))
+	list := make([]DownloadTask, 0, len(e.tasks))
 	for _, t := range e.tasks {
-		list = append(list, t)
+		list = append(list, *t)
 	}
+	slices.SortFunc(list, func(a, b DownloadTask) int { return b.CreatedAt.Compare(a.CreatedAt) })
 	return list
 }
 
-// GetTaskByID retrieves a specific task
+// GetTaskByID returns a snapshot of a task, or nil.
 func (e *Engine) GetTaskByID(id string) *DownloadTask {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
-	return e.tasks[id]
+	if t, ok := e.tasks[id]; ok {
+		snapshot := *t
+		return &snapshot
+	}
+	return nil
 }
 
 // PauseTask pauses an active download
@@ -368,7 +375,7 @@ func (e *Engine) PauseTask(id string) bool {
 	defer e.mu.Unlock()
 
 	task, ok := e.tasks[id]
-	if !ok {
+	if !ok || task.Status != "downloading" { // pausing a finished task would make Resume download it again
 		return false
 	}
 	if task.cancelFunc != nil {
@@ -385,7 +392,7 @@ func (e *Engine) ResumeTask(id string) bool {
 	defer e.mu.Unlock()
 
 	task, ok := e.tasks[id]
-	if !ok {
+	if !ok || task.Status != "paused" { // resuming a running task would start a second writer on the same file
 		return false
 	}
 	task.Status = "downloading"
@@ -464,6 +471,9 @@ func (e *Engine) StreamTaskFile(w http.ResponseWriter, r *http.Request, task *Do
 		return
 	}
 
+	if r.URL.Query().Get("download") == "1" {
+		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filepath.Base(task.SavePath)))
+	}
 	w.Header().Set("Content-Type", "video/mp4")
 	w.Header().Set("Accept-Ranges", "bytes")
 	http.ServeContent(w, r, stat.Name(), stat.ModTime(), file)

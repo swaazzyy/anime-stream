@@ -6,6 +6,7 @@ export default function AnimeCard({
   onWatchFirst, 
   onToggleWatchlist, 
   isInWatchlist = false,
+  showEpisodeCount = false,
   theme = 'dark'
 }) {
   const isDark = theme === 'dark';
@@ -68,7 +69,7 @@ export default function AnimeCard({
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
           <button
             type="button"
-            title={anime.type?.toLowerCase().includes('película') || anime.type?.toLowerCase().includes('movie') || anime.total_episodes === 1 ? "Reproducir película" : "Reproducir primer capítulo"}
+            title={anime.type?.toLowerCase().includes('película') || anime.type?.toLowerCase().includes('movie') ? "Reproducir película" : "Reproducir primer capítulo"}
             onClick={(e) => {
               e.stopPropagation();
               if (onWatchFirst) onWatchFirst(anime);
@@ -80,16 +81,20 @@ export default function AnimeCard({
           </button>
         </div>
 
-        {/* Bottom tags: Episode count & Type */}
+        {/* Bottom tags: Status / Película & Type */}
         <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between text-[11px] text-gray-300 font-semibold z-10">
           <span className={`px-1.5 py-0.5 rounded backdrop-blur-sm border ${
-            anime.type?.toLowerCase().includes('película') || anime.type?.toLowerCase().includes('movie') || anime.total_episodes === 1
+            anime.type?.toLowerCase().includes('película') || anime.type?.toLowerCase().includes('movie')
               ? 'bg-purple-900/80 border-purple-500/40 text-purple-200 font-extrabold'
-              : 'bg-black/70 border-white/5'
+              : anime.status === 'En Emisión'
+                ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300 font-bold'
+                : 'bg-black/70 border-white/5'
           }`}>
-            {anime.type?.toLowerCase().includes('película') || anime.type?.toLowerCase().includes('movie') || anime.total_episodes === 1
+            {anime.type?.toLowerCase().includes('película') || anime.type?.toLowerCase().includes('movie')
               ? 'PELÍCULA'
-              : (anime.total_episodes ? `${anime.total_episodes} Caps` : 'Serie TV')}
+              : (showEpisodeCount && anime.total_episodes
+                  ? (anime.total_episodes === 1 ? '1 Cap' : `${anime.total_episodes} Caps`)
+                  : (anime.status || 'Serie TV'))}
           </span>
           <span className="px-1.5 py-0.5 rounded bg-black/70 backdrop-blur-sm border border-white/5 text-[#f47521]">
             {anime.type || 'TV'}

@@ -13,7 +13,7 @@ export default function HeroBanner({ slides = [], onWatchEpisode, onOpenDetails,
   }, [slides]);
 
   if (!slides || slides.length === 0) return null;
-  const current = slides[currentIndex];
+  const current = slides[currentIndex % slides.length]; // a catalog refresh can shrink the list under the index
 
   const handlePrev = () => {
     setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);

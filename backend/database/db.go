@@ -1,6 +1,7 @@
 package database
 
 import (
+	"crypto/rand"
 	"database/sql"
 	"fmt"
 	"log"
@@ -119,6 +120,11 @@ func InitDB(dbPath string) (*sql.DB, error) {
 		UNIQUE(user_id, anime_id),
 		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 	);
+
+	CREATE TABLE IF NOT EXISTS settings (
+		key TEXT PRIMARY KEY,
+		value TEXT NOT NULL
+	);
 	`
 
 	if _, err := db.Exec(schema); err != nil {
@@ -128,14 +134,25 @@ func InitDB(dbPath string) (*sql.DB, error) {
 	// Add avatar column if it doesn't exist
 	_, _ = db.Exec("ALTER TABLE users ADD COLUMN avatar TEXT DEFAULT '';")
 
-	// Clean up and normalize legacy non-slug IDs in watch_history and watchlist
-	_, _ = db.Exec(`UPDATE watch_history SET anime_id = 'sword-art-online-alicization-war-of-underworld' WHERE anime_id = '108759' OR anime_title LIKE '%Alicization%';`)
+	// Clean up and normalize legacy non-slug IDs in watch_history and watchlist.
+	// (Match by ID only: a title match would also rewrite the other "Alicization" seasons.)
+	_, _ = db.Exec(`UPDATE watch_history SET anime_id = 'sword-art-online-alicization-war-of-underworld' WHERE anime_id = '108759';`)
 	_, _ = db.Exec(`UPDATE watch_history SET anime_id = 'dororo' WHERE anime_id = 'accion' AND anime_title = 'Dororo';`)
-	_, _ = db.Exec(`UPDATE watchlist SET anime_id = 'sword-art-online-alicization-war-of-underworld' WHERE anime_id = '108759' OR anime_title LIKE '%Alicization%';`)
+	_, _ = db.Exec(`UPDATE watchlist SET anime_id = 'sword-art-online-alicization-war-of-underworld' WHERE anime_id = '108759';`)
 	_, _ = db.Exec(`UPDATE watchlist SET anime_id = 'dororo' WHERE anime_id = 'accion' AND anime_title = 'Dororo';`)
 
 	log.Println("SQLite database initialized successfully at", dbPath)
 	return db, nil
+}
+
+// JWTSecret returns this install's random token-signing key, created on first start and kept across restarts.
+func JWTSecret() ([]byte, error) {
+	if _, err := DB.Exec("INSERT OR IGNORE INTO settings (key, value) VALUES ('jwt_secret', ?)", rand.Text()); err != nil {
+		return nil, err
+	}
+	var secret string
+	err := DB.QueryRow("SELECT value FROM settings WHERE key = 'jwt_secret'").Scan(&secret)
+	return []byte(secret), err
 }
 
 // User methods
@@ -185,7 +202,7 @@ func UpdateUserPasswordHash(userID int64, passwordHash string) error {
 // WatchHistory methods (Still Viewing / Continue Watching)
 func SaveWatchProgress(userID int64, h WatchHistory) error {
 	// Normalize known anime IDs
-	if h.AnimeID == "108759" || strings.Contains(strings.ToLower(h.AnimeTitle), "alicization") {
+	if h.AnimeID == "108759" {
 		h.AnimeID = "sword-art-online-alicization-war-of-underworld"
 	} else if h.AnimeID == "accion" && strings.Contains(strings.ToLower(h.AnimeTitle), "dororo") {
 		h.AnimeID = "dororo"

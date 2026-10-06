@@ -27,7 +27,12 @@ type Anime struct {
 	TrailerURL    string    `json:"trailer_url,omitempty"`
 	Studio        string    `json:"studio,omitempty"`
 	Episodes      []Episode `json:"episodes,omitempty"`
+
+	fetchedAt time.Time // set on live AnimeAV1 detail fetches; zero means "never fresh"
 }
+
+// detailsTTL bounds how long cached details are served, so airing shows pick up new episodes.
+const detailsTTL = 30 * time.Minute
 
 type Episode struct {
 	Number    int              `json:"number"`
@@ -93,10 +98,83 @@ func buildInstantCatalog() CatalogResponse {
 	}
 }
 
+// EnrichAnimeWithRealDetails fills episode counts and ratings from the cache, the curated list or live AnimeAV1
+// details. It waits at most 3s; slower lookups only fill the cache (they never touch list, which the caller
+// may already be serving), so the next listing picks them up.
+func EnrichAnimeWithRealDetails(list []Anime) []Anime {
+	var wg sync.WaitGroup
+	sem := make(chan struct{}, 8)
+
+	for i := range list {
+		if enrichFromKnown(&list[i]) {
+			continue
+		}
+		wg.Add(1)
+		go func(id string) {
+			defer wg.Done()
+			sem <- struct{}{}
+			defer func() { <-sem }()
+
+			if details, err := FetchAnimeAV1Details(id); err == nil {
+				cacheMutex.Lock()
+				animeCache[details.ID] = details
+				cacheMutex.Unlock()
+			}
+		}(list[i].ID)
+	}
+
+	done := make(chan struct{})
+	go func() {
+		wg.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(3 * time.Second):
+	}
+
+	for i := range list {
+		enrichFromKnown(&list[i])
+	}
+	return list
+}
+
+// enrichFromKnown copies episode count and rating from the cache or the curated list (movies count 1 episode).
+// It reports whether a was resolved without a network lookup.
+func enrichFromKnown(a *Anime) bool {
+	cacheMutex.RLock()
+	src := animeCache[a.ID]
+	cacheMutex.RUnlock()
+
+	if src == nil || src.TotalEpisodes == 0 {
+		src = nil
+		slug := Slugify(a.Title)
+		for i := range CuratedAnimeAV1 {
+			if CuratedAnimeAV1[i].ID == a.ID || CuratedAnimeAV1[i].ID == slug {
+				src = &CuratedAnimeAV1[i]
+				break
+			}
+		}
+	}
+	if src != nil {
+		a.TotalEpisodes = src.TotalEpisodes
+		if src.Score > 0 {
+			a.Score = src.Score
+		}
+		return true
+	}
+	if a.Type == "Película" || strings.Contains(strings.ToLower(a.Title), "movie") || strings.Contains(strings.ToLower(a.Title), "película") {
+		a.TotalEpisodes = 1
+		return true
+	}
+	return false
+}
+
 // refreshCatalogFromNetwork queries live AnimeAV1 in background
 func refreshCatalogFromNetwork() {
 	fetchOr := func(page int, order string) []Anime {
-		items, err := FetchAnimeAV1Catalog(page, order, "")
+		items, err := FetchAnimeAV1Catalog(page, order, "") // already enriched
 		if err != nil || len(items) == 0 {
 			return CuratedAnimeAV1
 		}
@@ -222,7 +300,7 @@ func SearchAnime(query string, filters url.Values) ([]Anime, error) {
 		cacheMutex.Unlock()
 	}
 
-	// 2. Live search from AnimeAV1.com (plus a spaced variant for slug-like queries)
+	// 2. Live search from AnimeAV1.com (plus a spaced variant for slug-like queries); already enriched
 	av1Results, _ := FetchAnimeAV1Catalog(1, "default", query)
 	if strings.Contains(query, "-") {
 		more, _ := FetchAnimeAV1Catalog(1, "default", strings.ReplaceAll(query, "-", " "))
@@ -261,7 +339,7 @@ func SearchAnime(query string, filters url.Values) ([]Anime, error) {
 	return results, nil
 }
 
-// GetAnimeByID finds anime by ID in AnimeAV1 cache, Curated, live AnimeAV1, or AniList fallback
+// GetAnimeByID finds anime by ID in AnimeAV1 live details, cache, Curated, or AniList fallback
 func GetAnimeByID(id string) (*Anime, error) {
 	id = strings.TrimSpace(id)
 	if id == "" {
@@ -271,28 +349,16 @@ func GetAnimeByID(id string) (*Anime, error) {
 		return nil, fmt.Errorf("contenido no disponible")
 	}
 
-	// 1. Direct check in CuratedAnimeAV1 (matches ID, slug, or title)
-	for _, a := range CuratedAnimeAV1 {
-		if a.ID == id || Slugify(a.Title) == id || strings.EqualFold(a.Title, id) {
-			if len(a.Episodes) == 0 {
-				a.Episodes = GenerateAnimeAV1Episodes(&a, a.TotalEpisodes)
-			}
-			return &a, nil
-		}
-	}
-
-	// 2. Check local memory cache
+	// 1. Check local memory cache if it has recently fetched episodes
 	cacheMutex.RLock()
-	cached, ok := animeCache[id]
+	cached := animeCache[id]
 	cacheMutex.RUnlock()
-	if ok && cached != nil {
-		if len(cached.Episodes) == 0 {
-			cached.Episodes = GenerateAnimeAV1Episodes(cached, cached.TotalEpisodes)
-		}
+	hasEpisodes := cached != nil && len(cached.Episodes) > 0
+	if hasEpisodes && time.Since(cached.fetchedAt) < detailsTTL {
 		return cached, nil
 	}
 
-	// 3. Live fetch anime from AnimeAV1 by slug
+	// 2. Live fetch anime from AnimeAV1 by slug (extracts real episodes)
 	liveAnime, err := FetchAnimeAV1Details(id)
 	if err == nil && liveAnime != nil {
 		cacheMutex.Lock()
@@ -300,6 +366,24 @@ func GetAnimeByID(id string) (*Anime, error) {
 		animeCache[liveAnime.ID] = liveAnime
 		cacheMutex.Unlock()
 		return liveAnime, nil
+	}
+	if hasEpisodes { // stale (or curated / AniList-only) beats nothing; don't retry the live fetch until the TTL passes
+		retryLater := *cached // copy: cached entries are read without the lock
+		retryLater.fetchedAt = time.Now()
+		cacheMutex.Lock()
+		animeCache[id] = &retryLater
+		cacheMutex.Unlock()
+		return &retryLater, nil
+	}
+
+	// 3. Fallback: check CuratedAnimeAV1
+	for _, a := range CuratedAnimeAV1 {
+		if a.ID == id || Slugify(a.Title) == id || strings.EqualFold(a.Title, id) {
+			if len(a.Episodes) == 0 {
+				a.Episodes = GenerateAnimeAV1Episodes(&a, a.TotalEpisodes)
+			}
+			return &a, nil
+		}
 	}
 
 	// 4. If ID is numeric (e.g. AniList ID like "108759"), lookup via AniList

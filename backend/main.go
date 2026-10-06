@@ -55,6 +55,12 @@ func main() {
 	}
 	defer db.Close()
 
+	secret, err := database.JWTSecret()
+	if err != nil {
+		log.Fatalf("Fatal: Could not load the token signing key: %v", err)
+	}
+	auth.SetSecret(secret)
+
 	mux := http.NewServeMux()
 
 	// Auth routes
@@ -112,7 +118,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:         ":" + port,
-		Handler:      corsMiddleware(auth.Middleware(mux)),
+		Handler:      http.MaxBytesHandler(corsMiddleware(auth.Middleware(mux)), 1<<20), // no API body needs more than 1 MB
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 60 * time.Second,
 		IdleTimeout:  120 * time.Second,

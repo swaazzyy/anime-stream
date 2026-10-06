@@ -11,8 +11,11 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// ponytail: hardcoded secret, anyone with the source can forge tokens; read it from an env var before exposing the server beyond localhost.
-var jwtSecret = []byte("anime-stream-super-secret-key-change-in-prod-2026")
+// jwtSecret is this install's random signing key, loaded at startup via SetSecret.
+var jwtSecret []byte
+
+// SetSecret sets the key used to sign and verify tokens.
+func SetSecret(secret []byte) { jwtSecret = secret }
 
 type ctxKey struct{}
 
