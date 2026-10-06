@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Navbar from './components/Navbar';
 import HeroBanner from './components/HeroBanner';
 import ContinueWatchingRow from './components/ContinueWatchingRow';
@@ -8,11 +8,9 @@ import AnimeCard from './components/AnimeCard';
 import AnimeDetailPage from './pages/AnimeDetailPage';
 import WatchPage from './pages/WatchPage';
 import DownloadCapModal from './components/DownloadCapModal';
-import DownloadsView from './components/DownloadsView';
 import MyListView from './components/MyListView';
 import AuthModal from './components/AuthModal';
 import UserProfileModal from './components/UserProfileModal';
-import GluetunModal from './components/GluetunModal';
 import { api } from './services/api';
 import { Flame, Search, Clock, Play, X } from 'lucide-react';
 
@@ -24,13 +22,24 @@ const HOME_ROWS = [
 
 function parseCurrentRoute() {
   const pathname = window.location.pathname;
+  const searchParams = new URLSearchParams(window.location.search);
   const trimmed = pathname.replace(/^\/+|\/+$/g, '');
   const parts = trimmed ? trimmed.split('/') : [];
+
+  if (parts[0] === 'browse' || parts[0] === 'buscar' || parts[0] === 'catalogo' || searchParams.has('genre') || searchParams.has('category') || searchParams.has('status') || searchParams.has('order')) {
+    const filters = {};
+    ['category', 'genre', 'status', 'order'].forEach(k => {
+      const val = searchParams.get(k);
+      if (val) filters[k] = val;
+    });
+    const q = searchParams.get('q') || searchParams.get('search') || '';
+    return { page: 'browse', query: q, filters };
+  }
 
   if (parts.length === 0 || parts[0] === 'home') {
     return { page: 'home', tab: 'home' };
   }
-  if (parts[0] === 'continue' || parts[0] === 'watchlist' || parts[0] === 'downloads') {
+  if (parts[0] === 'continue' || parts[0] === 'watchlist') {
     return { page: 'home', tab: parts[0] };
   }
   if ((parts[0] === 'media' || parts[0] === 'anime') && parts[1]) {
@@ -56,19 +65,17 @@ export default function App() {
   const [continueWatching, setContinueWatching] = useState([]);
   const [watchlistMap, setWatchlistMap] = useState({});
   const [user, setUser] = useState(api.getCurrentUser());
-  const [activeDownloadsCount, setActiveDownloadsCount] = useState(0);
 
   // Search
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState(null);
+  const searchSeq = useRef(0); // bumped by every search and navigation, so a slow stale search can't overwrite the page
   const [isSearching, setIsSearching] = useState(false);
 
   // Modals for actions
   const [downloadModalData, setDownloadModalData] = useState(null);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isVpnModalOpen, setIsVpnModalOpen] = useState(false);
-  const [vpnStatus, setVpnStatus] = useState(null);
 
   // Sync theme class to document
   useEffect(() => {
@@ -84,6 +91,7 @@ export default function App() {
   // Browser navigation history support (Back / Forward)
   useEffect(() => {
     const handlePopState = () => {
+      searchSeq.current++;
       setRoute(parseCurrentRoute());
       setSearchResults(null);
     };
@@ -98,6 +106,7 @@ export default function App() {
       setResumeProgress(0);
     }
     window.history.pushState({}, '', url);
+    searchSeq.current++;
     setRoute(parseCurrentRoute());
     setSearchResults(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -107,17 +116,6 @@ export default function App() {
     loadCatalog();
     loadContinueWatching();
     loadWatchlist();
-    loadTorrentsCount();
-    loadVpnStatus();
-  };
-
-  const loadVpnStatus = async () => {
-    try {
-      const status = await api.getVpnStatus();
-      setVpnStatus(status);
-    } catch (err) {
-      console.log("VPN status load:", err);
-    }
   };
 
   const loadCatalog = async () => {
@@ -149,19 +147,28 @@ export default function App() {
     }
   };
 
-  const loadTorrentsCount = async () => {
-    try {
-      const tasks = await api.getTorrents();
-      const active = tasks?.filter(t => t.status === 'downloading').length || 0;
-      setActiveDownloadsCount(active);
-    } catch (err) {
-      console.error("Failed to fetch torrents count:", err);
-    }
-  };
-
   useEffect(() => {
     loadAllData();
+    // An expired (or re-keyed) token makes the server treat us as a guest; drop the stale local session to match.
+    if (api.getCurrentUser()) {
+      api.me().then((res) => {
+        if (!res.authenticated) {
+          api.logout();
+          setUser(null);
+        }
+      }).catch(() => {});
+    }
   }, []);
+
+  // Handle browse tab from URL query params (when opened in a new tab)
+  useEffect(() => {
+    if (route.page === 'browse') {
+      const q = route.query || '';
+      const f = route.filters || {};
+      setSearchQuery(q);
+      handleSearch(q, f);
+    }
+  }, [route.page, route.query, JSON.stringify(route.filters || {})]);
 
   // Search handler
   const handleSearch = async (query, filters = {}) => {
@@ -169,19 +176,20 @@ export default function App() {
       setSearchResults(null);
       return;
     }
+    const seq = ++searchSeq.current;
     setIsSearching(true);
     setSearchResults([]); // shows the results panel (with spinner) while fetching
-    if (route.page !== 'home') {
+    if (route.page !== 'home' && route.page !== 'browse') {
       window.history.pushState({}, '', '/');
       setRoute({ page: 'home', tab: 'home' });
     }
     try {
       const results = await api.searchAnime(query?.trim() || '', filters);
-      setSearchResults(results || []);
+      if (seq === searchSeq.current) setSearchResults(results || []);
     } catch (err) {
       console.error("Search error:", err);
     } finally {
-      setIsSearching(false);
+      if (seq === searchSeq.current) setIsSearching(false);
     }
   };
 
@@ -217,14 +225,9 @@ export default function App() {
   };
 
   // Resume from Continue Watching
+  // (Legacy anime IDs are normalized by the backend when history is saved and at startup.)
   const handleResumeContinueWatching = (item) => {
-    let cleanId = item.anime_id || item.id;
-    if (cleanId === '108759' || item.anime_title?.toLowerCase().includes('alicization')) {
-      cleanId = 'sword-art-online-alicization-war-of-underworld';
-    } else if (cleanId === 'accion' && item.anime_title?.toLowerCase().includes('dororo')) {
-      cleanId = 'dororo';
-    }
-    navigate(`/media/${cleanId}/${item.episode_number || 1}`, { progress: item.progress_seconds || 0 });
+    navigate(`/media/${item.anime_id || item.id}/${item.episode_number ?? 1}`, { progress: item.progress_seconds || 0 });
   };
 
   // Remove from Continue Watching
@@ -261,11 +264,6 @@ export default function App() {
     }
   };
 
-  // Play local downloaded cap from Go torrent engine
-  const handlePlayLocalCap = (task) => {
-    navigate(`/media/${task.id || 'torrent'}/${task.episode_number || 1}`);
-  };
-
   const openDownloadModal = (anime, episodeNumber, opt) => {
     const downloadOptions = Array.isArray(opt) ? opt : (opt ? [opt] : []);
     setDownloadModalData({ anime, episodeNumber, downloadOptions });
@@ -294,9 +292,6 @@ export default function App() {
           loadAllData();
         }}
         continueWatchingCount={continueWatching.length}
-        activeDownloadsCount={activeDownloadsCount}
-        vpnStatus={vpnStatus}
-        onOpenVpnModal={() => setIsVpnModalOpen(true)}
         theme={theme}
         onToggleTheme={toggleTheme}
       />
@@ -322,7 +317,7 @@ export default function App() {
               </div>
 
               <button
-                onClick={() => { setSearchResults(null); setSearchQuery(''); }}
+                onClick={() => { setSearchResults(null); setSearchQuery(''); navigate('/'); }}
                 className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors ${
                   isDark 
                     ? 'bg-[#1e2029] hover:bg-[#282a36] text-gray-300 hover:text-white' 
@@ -530,14 +525,6 @@ export default function App() {
             )}
 
             {/* Tab: TORRENT & DOWNLOADS */}
-            {route.tab === 'downloads' && (
-              <DownloadsView 
-                onPlayLocalCap={handlePlayLocalCap} 
-                theme={theme}
-                vpnStatus={vpnStatus}
-                onOpenVpnModal={() => setIsVpnModalOpen(true)}
-              />
-            )}
           </>
         )}
       </main>
@@ -550,8 +537,6 @@ export default function App() {
           episodeNumber={downloadModalData.episodeNumber}
           downloadOptions={downloadModalData.downloadOptions}
           onClose={() => setDownloadModalData(null)}
-          onDownloadStarted={loadTorrentsCount}
-          onOpenDownloadsTab={() => navigate('/downloads')}
           theme={theme}
         />
       )}
@@ -585,32 +570,17 @@ export default function App() {
         />
       )}
 
-      {/* 4. Gluetun VPN Status & Configuration Modal */}
-      {isVpnModalOpen && (
-        <GluetunModal
-          onClose={() => {
-            setIsVpnModalOpen(false);
-            loadVpnStatus();
-          }}
-          theme={theme}
-        />
-      )}
+
 
       {/* Footer */}
       <footer className={`border-t py-8 text-center text-xs transition-colors ${
         isDark ? 'border-[#23252b] bg-[#0c0d10] text-gray-500' : 'border-gray-200 bg-white text-gray-600'
       }`}>
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-center gap-4">
           <div className="flex items-center gap-2">
             <Flame className="w-4 h-4 text-[#f47521]" />
             <span className={`font-bold ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>GoAnime</span>
             <span>— Tu portal favorito para ver anime online</span>
-          </div>
-
-          <div className={`flex items-center gap-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-            <span>Servidores AnimeAV1 UPNShare, Voe, MP4Upload</span>
-            <span>•</span>
-            <span>Motor BitTorrent Integrado</span>
           </div>
         </div>
       </footer>

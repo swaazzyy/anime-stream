@@ -67,6 +67,7 @@ export default function WatchPage({
     setLoading(true);
     setError(null);
     setIsPlaying(false);
+    setSelectedServer(null);
 
     Promise.all([
       api.getAnime(slug).catch(() => ({ anime: { id: slug, title: slug } })),
@@ -75,17 +76,26 @@ export default function WatchPage({
       .then(([animeRes, epData]) => {
         if (!isMounted) return;
         setAnime(animeRes.anime || { id: slug, title: slug });
-        setEpisodeData(epData);
 
-        if (epData.servers && epData.servers.length > 0) {
-          const validServers = epData.servers.filter(s => {
-            const n = s.name?.toLowerCase() || '';
-            return !n.includes('nativo') && !n.includes('zilla') && !n.includes('streamtape') && !n.includes('mega cloud');
-          });
-          const list = validServers.length > 0 ? validServers : epData.servers;
-          setEpisodeData(prev => ({ ...prev, servers: list }));
-          setSelectedServer(list[0]);
-        }
+        const servers = epData.servers || [];
+        const validServers = servers.filter(s => {
+          const n = s.name?.toLowerCase() || '';
+          return !n.includes('nativo') && !n.includes('zilla') && !n.includes('streamtape') && !n.includes('mega cloud');
+        });
+        const list = validServers.length > 0 ? validServers : servers;
+
+        // Prioritize Voe server as the principal server
+        list.sort((a, b) => {
+          const aVoe = ((a.name || '') + (a.url || '') + (a.id || '')).toLowerCase().includes('voe');
+          const bVoe = ((b.name || '') + (b.url || '') + (b.id || '')).toLowerCase().includes('voe');
+          if (aVoe && !bVoe) return -1;
+          if (!aVoe && bVoe) return 1;
+          return 0;
+        });
+
+        setEpisodeData({ ...epData, servers: list });
+        setSelectedServer(list[0] ?? null);
+        if (list.length === 0) setError('No hay servidores disponibles para este episodio. Intenta de nuevo más tarde.');
         setLoading(false);
       })
       .catch((err) => {
@@ -98,34 +108,36 @@ export default function WatchPage({
     return () => { isMounted = false; };
   }, [slug, episodeNum]);
 
-  const isMovie = anime?.type?.toLowerCase().includes('película') || anime?.type?.toLowerCase().includes('movie') || anime?.total_episodes === 1;
+  // By type only: a series that has aired a single episode so far is not a movie.
+  const isMovie = anime?.type?.toLowerCase().includes('película') || anime?.type?.toLowerCase().includes('movie');
   const totalEpisodes = anime?.total_episodes || (isMovie ? 1 : 1120);
   const minEpNum = anime?.episodes?.[0]?.number ?? 1;
-  const hasNextEpisode = !isMovie && episodeNum < totalEpisodes;
+  const maxEpNum = anime?.episodes?.at(-1)?.number ?? totalEpisodes; // lists that start at Episodio 0 end at total-1
+  const hasNextEpisode = !isMovie && episodeNum < maxEpNum;
   const hasPrevEpisode = !isMovie && episodeNum > minEpNum;
   const isInWatchlist = !!(anime && watchlistMap[anime.id]);
+  const isEmbed = selectedServer?.server_type === 'embed';
+
+  const saveProgress = (progress, duration, completed) =>
+    api.saveWatchProgress({
+      anime_id: anime.id,
+      anime_title: anime.title,
+      anime_poster: anime.poster,
+      episode_number: episodeNum,
+      episode_title: episodeData?.title || `Episodio ${episodeNum}`,
+      progress_seconds: Math.floor(progress),
+      duration_seconds: Math.floor(duration),
+      completed,
+    }).then(() => onProgressSaved?.(), err => console.error("Error saving progress:", err));
 
   // Video element setup & progress sync
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || selectedServer?.server_type === 'embed' || !anime) return;
+    if (!video || isEmbed || !anime) return;
 
     if (initialProgress > 0 && currentTime === initialProgress) {
       video.currentTime = initialProgress;
     }
-
-    const saveProgress = (progress, completed) => {
-      return api.saveWatchProgress({
-        anime_id: anime.id,
-        anime_title: anime.title,
-        anime_poster: anime.poster,
-        episode_number: episodeNum,
-        episode_title: episodeData?.title || `Episodio ${episodeNum}`,
-        progress_seconds: Math.floor(progress),
-        duration_seconds: Math.floor(video.duration || 1425),
-        completed,
-      }).catch(err => console.error("Error saving progress:", err));
-    };
 
     const handleTimeUpdate = () => {
       const cur = video.currentTime;
@@ -135,14 +147,12 @@ export default function WatchPage({
       const now = Math.floor(cur);
       if (Math.abs(now - lastSyncTime.current) >= 5) {
         lastSyncTime.current = now;
-        saveProgress(cur, video.duration ? cur >= video.duration * 0.92 : false)
-          ?.then(() => onProgressSaved?.());
+        saveProgress(cur, video.duration || 1425, video.duration ? cur >= video.duration * 0.92 : false);
       }
     };
 
     const handleEnded = () => {
-      setIsPlaying(false);
-      saveProgress(video.duration || 1425, true);
+      saveProgress(video.duration || 1425, video.duration || 1425, true);
       if (hasNextEpisode) {
         onNavigate(`/media/${anime.id}/${episodeNum + 1}`);
       }
@@ -156,6 +166,20 @@ export default function WatchPage({
       video.removeEventListener('ended', handleEnded);
     };
   }, [anime, episodeNum, episodeData, initialProgress, selectedServer, hasNextEpisode]);
+
+  // Embedded players are cross-origin iframes whose playback position can't be read, so for them the
+  // progress saved is the time this page stays visible: enough for "Siguiendo Viendo" to resume the right episode.
+  useEffect(() => {
+    if (!anime || !isEmbed) return;
+    const duration = episodeData?.duration || 1440;
+    let watched = initialProgress;
+    const timer = setInterval(() => {
+      if (document.hidden) return;
+      watched += 15;
+      saveProgress(watched, duration, watched >= duration * 0.9);
+    }, 15000);
+    return () => clearInterval(timer);
+  }, [anime, episodeData, episodeNum, initialProgress, isEmbed]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -188,12 +212,11 @@ export default function WatchPage({
   const togglePlay = () => {
     const video = videoRef.current;
     if (!video) return;
+    // isPlaying follows the video's own play/pause events, so a rejected play() can't leave it stuck on true
     if (video.paused) {
       video.play().catch(e => console.log("Play interrupted:", e));
-      setIsPlaying(true);
     } else {
       video.pause();
-      setIsPlaying(false);
     }
   };
 
@@ -253,11 +276,9 @@ export default function WatchPage({
     setShowControls(true);
     clearTimeout(hideControlsTimeout.current);
     hideControlsTimeout.current = setTimeout(() => {
-      if (isPlaying) setShowControls(false);
+      if (videoRef.current && !videoRef.current.paused) setShowControls(false); // live check: isPlaying here would be stale
     }, 3000);
   };
-
-  const isEmbed = selectedServer?.server_type === 'embed';
 
   const episodesList = anime?.episodes || Array.from({ length: Math.min(totalEpisodes, 24) }, (_, i) => ({
     number: i + 1,
@@ -389,6 +410,8 @@ export default function WatchPage({
                 className="w-full h-full object-contain"
                 playsInline
                 preload="metadata"
+                onPlay={() => setIsPlaying(true)}
+                onPause={() => setIsPlaying(false)}
               />
 
               {/* Crunchyroll Bottom Controls Overlay for Direct Video */}
@@ -663,6 +686,7 @@ export default function WatchPage({
                     <img
                       src={ep.thumbnail || anime?.poster || anime?.banner}
                       alt={ep.title}
+                      loading="lazy"
                       onError={(e) => {
                         if (anime?.poster && e.currentTarget.src !== anime.poster) {
                           e.currentTarget.src = anime.poster;

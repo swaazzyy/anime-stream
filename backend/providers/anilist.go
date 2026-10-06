@@ -145,9 +145,12 @@ func convertMediaToAnime(m *anilistMedia) Anime {
 	// Clean HTML from description
 	cleanDesc := cleanHTML(m.Description)
 
-	status := "Finished"
-	if m.Status == "RELEASING" {
-		status = "Airing"
+	status := "Finalizado"
+	switch m.Status {
+	case "RELEASING":
+		status = "En Emisión"
+	case "NOT_YET_RELEASED":
+		status = "Próximamente"
 	}
 
 	score := m.AverageScore / 10.0
@@ -157,7 +160,7 @@ func convertMediaToAnime(m *anilistMedia) Anime {
 
 	eps := m.Episodes
 	if eps <= 0 {
-		eps = 12
+		eps = 1
 	}
 
 	// Build episodes with exported images
@@ -180,7 +183,6 @@ func convertMediaToAnime(m *anilistMedia) Anime {
 		}
 	}
 
-	slug := Slugify(m.Title.Romaji)
 	for i := 1; i <= totalEps; i++ {
 		epThumbnail := banner
 		if img, ok := streamImgMap[i]; ok {
@@ -195,17 +197,12 @@ func convertMediaToAnime(m *anilistMedia) Anime {
 			epTitle = t
 		}
 
-		// Generate AnimeFLV servers with embed stream links
-		servers, downloads := GetAnimeFLVEpisodeServers(slug, m.Title.Romaji, i)
-
 		episodes = append(episodes, Episode{
 			Number:    i,
 			Title:     epTitle,
 			Thumbnail: epThumbnail,
 			Duration:  1440,
-			Synopsis:  fmt.Sprintf("Capítulo %d de %s en audio japonés con subtítulos al español. Servidores disponibles: Streamwish, Mega, Streamtape, YourUpload, Mp4Upload.", i, title),
-			Servers:   servers,
-			Downloads: downloads,
+			Synopsis:  fmt.Sprintf("Capítulo %d de %s en audio japonés con subtítulos al español.", i, title),
 		})
 	}
 

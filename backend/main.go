@@ -16,7 +16,6 @@ import (
 	"anime-stream-backend/api"
 	"anime-stream-backend/auth"
 	"anime-stream-backend/database"
-	"anime-stream-backend/torrent"
 )
 
 //go:embed all:dist
@@ -55,6 +54,12 @@ func main() {
 	}
 	defer db.Close()
 
+	secret, err := database.JWTSecret()
+	if err != nil {
+		log.Fatalf("Fatal: Could not load the token signing key: %v", err)
+	}
+	auth.SetSecret(secret)
+
 	mux := http.NewServeMux()
 
 	// Auth routes
@@ -78,18 +83,6 @@ func main() {
 	// VPN & Gluetun status route
 	mux.HandleFunc("GET /api/vpn/status", api.HandleVPNStatus)
 
-	// 2. Initialize Torrent and Episode Download Engine; its routes exist only if it started
-	if torEngine, err := torrent.InitEngine(getenv("DOWNLOADS_DIR", "downloads")); err != nil {
-		log.Printf("Notice: Torrent engine disabled: %v", err)
-	} else {
-		defer torEngine.Close()
-		mux.HandleFunc("GET /api/torrents/download-torrent-file", api.HandleDownloadTorrentFile)
-		mux.HandleFunc("/api/torrents", api.HandleTorrents)
-		mux.HandleFunc("POST /api/torrents/{id}/{action}", api.HandleTorrentAction)
-		mux.HandleFunc("DELETE /api/torrents/{id}", api.HandleDeleteTorrent)
-		mux.HandleFunc("GET /api/torrents/{id}/stream", api.HandleStreamTorrent)
-	}
-
 	// Frontend is embedded at build time (vite builds straight into backend/dist); FRONTEND_DIST overrides it with a folder on disk.
 	distFS, _ := fs.Sub(embeddedDist, "dist")
 	if dir := os.Getenv("FRONTEND_DIST"); dir != "" {
@@ -112,7 +105,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:         ":" + port,
-		Handler:      corsMiddleware(auth.Middleware(mux)),
+		Handler:      http.MaxBytesHandler(corsMiddleware(auth.Middleware(mux)), 1<<20), // no API body needs more than 1 MB
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 60 * time.Second,
 		IdleTimeout:  120 * time.Second,

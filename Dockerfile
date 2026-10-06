@@ -10,12 +10,11 @@ WORKDIR /app
 ARG TARGETARCH=amd64
 COPY --chmod=755 anime-stream-linux-${TARGETARCH} /app/anime-stream
 
-# Directories for persistent database and downloads
-RUN mkdir -p /app/data /app/downloads
+# Directory for the persistent database
+RUN mkdir -p /app/data
 
 ENV PORT=8080 \
     DB_PATH=/app/data/anime_stream.db \
-    DOWNLOADS_DIR=/app/downloads \
     GLUETUN_CONTROL_URL=http://localhost:8000
 
 EXPOSE 8080

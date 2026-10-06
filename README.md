@@ -1,6 +1,6 @@
 # 🎌 GoAnime FLV — Plataforma de Streaming de Anime en Go
 
-Plataforma de streaming de anime con arquitectura **Cliente-Servidor** de alto rendimiento escrita en **Go**, con base de datos **SQLite**, **motor BitTorrent integrado con protección Gluetun VPN (Kill Switch & Zero IP Leaks)** para descarga segura de capítulos, múltiples y una interfaz moderna con tema oscuro inspirada en **Crunchyroll**.
+Plataforma de streaming de anime con arquitectura **Cliente-Servidor** de alto rendimiento escrita en **Go**, con base de datos **SQLite**, **protección opcional con Gluetun VPN (Kill Switch & Zero IP Leaks)**, enlaces de descarga de AnimeAV1 y una interfaz moderna con tema oscuro inspirada en **Crunchyroll**.
 
 ---
 
@@ -8,20 +8,19 @@ Plataforma de streaming de anime con arquitectura **Cliente-Servidor** de alto r
 
 ### 1. 🚀 Backend en Go (Alto Rendimiento y Conexión Fluida)
 - Escrito completamente en Go sin dependencias de CGO (`modernc.org/sqlite`).
-- Servidor REST API ultrarrápido con soporte de streaming parcial por rangos HTTP (`Accept-Ranges: bytes` para reproducción fluida).
+- Servidor REST API ligero sobre `net/http` de la biblioteca estándar.
 - Autenticación segura mediante **JWT (JSON Web Tokens)** y contraseñas hasheadas con **bcrypt**.
 - Servidor estático integrado: sirve la aplicación frontend Single Page Application (SPA) directamente desde `http://localhost:8080` mediante `embed.FS`.
 
 ### 2. 🛡️ Anonimato y Protección Total con Gluetun VPN
 - **Integración Nativa con Gluetun (`qmcgaw/gluetun`)**:
-  - En entornos Docker, el servicio web y el motor BitTorrent comparten el espacio de red de Gluetun (`network_mode: "service:gluetun"`).
-  - Todo el tráfico P2P BitTorrent, peticiones de scraping y streaming viajan obligatoriamente a través del túnel VPN cifrado.
+  - En entornos Docker, el servicio web comparte el espacio de red de Gluetun (`network_mode: "service:gluetun"`).
+  - Todas las peticiones del servidor (scraping de AnimeAV1 y AniList) viajan obligatoriamente a través del túnel VPN cifrado. Los reproductores embebidos los carga tu navegador directamente.
 - **Kill Switch Integrado**:
   - Si el enlace VPN cae o se desconecta inesperadamente, el firewall a nivel de red corta de inmediato toda salida de paquetes a internet. **Cero fugas de tu IP real ante tu ISP**.
 - **Monitor de Seguridad en Tiempo Real en la Interfaz Web**:
   - **Insignia en el Navbar**: Escudo verde (`Protegido por VPN`) o ámbar (`Conexión Directa`) visible en todo momento.
   - **Modal de Estado VPN**: Consulta en vivo la IP pública saliente, el país asignado, el protocolo activo (WireGuard / OpenVPN) y el estado del servicio de control.
-  - **Banner Preventivo en Descargas BitTorrent**: Notifica al usuario antes de iniciar descargas P2P si el tráfico se encuentra blindado o expuesto.
 - **Compatibilidad con Múltiples Proveedores**:
   - Soporte para Mullvad, ProtonVPN, NordVPN, Surfshark, PIA, Windscribe, CyberGhost y túneles personalizados WireGuard / OpenVPN.
 
@@ -38,15 +37,9 @@ Plataforma de streaming de anime con arquitectura **Cliente-Servidor** de alto r
 - **Gestión de usuarios y perfiles**: Registro, login, tokens de sesión y almacenamiento de avatar.
 - **"Siguiendo Viendo" (Still Viewing / Continue Watching)**: Guarda el segundo exacto de reproducción de cada anime y capítulo, duración total y estado de completado. Sincronización automática cada 5 segundos mientras el usuario mira el anime.
 - **"Para el Futuro / Mi Lista" (Watchlist)**: Organización por pestañas: *Por Ver (Para el Futuro)*, *Viendo (Siguiendo)*, *Completados* y *Favoritos*.
-- **Historial de descargas**: Registro de torrents y archivos descargados.
 
-### 5. ⚡ Motor BitTorrent Integrado & Descarga de Capítulos
-- Desarrollado sobre `github.com/anacrolix/torrent`.
-- **Modal de Descarga de Capítulos Limpio y Rápido**:
-  - **📁 Descargar Archivo .torrent**: Archivo metainfo compatible al 100% con clientes BitTorrent locales (uTorrent, qBittorrent, etc.).
-  - **🌐 Servidores Espejo Externos**: Descargas directas vía Mega, 1Fichier, TransferIt, MP4Upload.
-  - **📋 Enlace Magnet Directo**: Para copiar en el portapapeles con un clic.
-- **Reproducción Local de Caps**: Reproducción directa desde el servidor local sin consumir ancho de banda de internet y con 0 buffering.
+### 5. 📥 Descarga de Capítulos
+- **🌐 Servidores Espejo de AnimeAV1**: Enlaces reales de descarga (Mega, 1Fichier, TransferIt, MP4Upload) obtenidos en vivo para cada episodio.
 
 ### 6. 📺 Servidores AnimeAV1 y Reproductor Cinema
 - **Selector de Servidores con Logotipo Oficial AnimeAV1**:
@@ -83,13 +76,11 @@ f:\anime-stream\
 ├── .env.example                   # Plantilla de credenciales y configuración VPN
 ├── backend/
 │   ├── api/
-│   │   ├── handlers.go  # Endpoints REST (auth, profile, catalog, episode, torrents)
+│   │   ├── handlers.go  # Endpoints REST (auth, profile, catalog, episode, history, lists)
 │   │   └── vpn.go       # Cliente de telemetría y estado con Gluetun Control API
 │   ├── auth/            # JWT tokens y hashing bcrypt
 │   ├── database/        # Driver SQLite puro en Go, migraciones de usuarios y avatares
 │   ├── providers/       # Servidores AnimeAV1, catálogo, miniaturas y búsqueda Jikan
-│   ├── torrent/         # Cliente BitTorrent (anacrolix/torrent) y streaming local
-│   ├── downloads/       # Directorio de capítulos descargados
 │   ├── dist/            # Build de Vite (`npm run build`) empaquetado con embed.FS
 │   └── main.go          # Servidor HTTP, CORS, ruteo SPA y embed
 ├── frontend/
@@ -108,7 +99,7 @@ f:\anime-stream\
 
 ### 🐳 Opción 1: Despliegue con Docker Compose + Gluetun VPN (Recomendado para Máxima Privacidad)
 
-Esta modalidad garantiza que **el 100% de las conexiones BitTorrent y solicitudes de streaming pasen por un túnel cifrado** con Kill Switch automático en caso de corte:
+Esta modalidad garantiza que **el 100% de las conexiones del servidor pasen por un túnel cifrado** con Kill Switch automático en caso de corte:
 
 1. **Crear archivo de configuración `.env`**:
    ```bash
@@ -187,7 +178,6 @@ PORT=3000 DB_PATH=/var/data/anime.db GLUETUN_CONTROL_URL=http://localhost:8000 .
 | :--- | :--- | :--- |
 | `PORT` | `8080` | Puerto en el que escucha el servidor web |
 | `DB_PATH` | `anime_stream.db` | Ruta del archivo de base de datos SQLite |
-| `DOWNLOADS_DIR` | `downloads` | Carpeta donde se guardan los torrents y capítulos descargados |
 | `GLUETUN_CONTROL_URL` | `http://localhost:8000` | URL del servidor de control de Gluetun para telemetría de VPN |
 | `GLUETUN_API_KEY` | *(vacío)* | Clave `X-API-Key` de la API de control (Gluetun ≥ v3.39.1 la exige); debe coincidir con la de Gluetun |
 | `FRONTEND_DIST` | *(embebido)* | Ruta opcional a una carpeta dist externa si se desea sobrescribir el frontend |

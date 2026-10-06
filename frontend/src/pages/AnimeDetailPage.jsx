@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   Play, 
   Star, 
@@ -35,6 +35,18 @@ export default function AnimeDetailPage({
   const [watchlistStatus, setWatchlistStatus] = useState('');
   const [isFavorite, setIsFavorite] = useState(false);
   const [selectedTab, setSelectedTab] = useState('episodes');
+  const [showListMenu, setShowListMenu] = useState(false);
+  const listMenuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (listMenuRef.current && !listMenuRef.current.contains(e.target)) {
+        setShowListMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (!slug) return;
@@ -117,7 +129,8 @@ export default function AnimeDetailPage({
     );
   }
 
-  const isMovie = anime.type?.toLowerCase().includes('película') || anime.type?.toLowerCase().includes('movie') || anime.total_episodes === 1;
+  // By type only: a series that has aired a single episode so far is not a movie.
+  const isMovie = anime.type?.toLowerCase().includes('película') || anime.type?.toLowerCase().includes('movie');
   const episodes = anime.episodes || [];
   const firstEpNum = episodes.length > 0 ? episodes[0].number : 1;
 
@@ -128,7 +141,7 @@ export default function AnimeDetailPage({
         thumbnail: anime.banner || anime.poster,
         synopsis: anime.synopsis || 'Película completa en alta definición.',
       }])
-    : (episodes.length > 0 ? episodes : Array.from({ length: Math.min(anime.total_episodes || 12, 24) }, (_, i) => ({
+    : (episodes.length > 0 ? episodes : Array.from({ length: Math.max(1, anime.total_episodes || 1) }, (_, i) => ({
         number: i + 1,
         title: `Episodio ${i + 1}`,
         thumbnail: anime.poster,
@@ -158,27 +171,29 @@ export default function AnimeDetailPage({
       </div>
 
       {/* Cinematic Backdrop Hero Banner */}
-      <div className="relative w-full h-[340px] sm:h-[420px] md:h-[480px] overflow-hidden bg-black select-none border-b border-[#23252b]">
-        <img
-          src={anime.banner || anime.poster}
-          alt={anime.title}
-          onError={(e) => {
-            if (anime?.poster && e.currentTarget.src !== anime.poster) {
-              e.currentTarget.src = anime.poster;
-            }
-          }}
-          className="w-full h-full object-cover object-center filter brightness-[0.55] transition-all duration-700"
-        />
-        {/* Soft edge gradients */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0b0c0e] via-[#0b0c0e]/60 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0b0c0e] via-[#0b0c0e]/80 to-transparent w-full md:w-3/4" />
+      <div className="relative w-full min-h-[380px] sm:min-h-[440px] md:min-h-[480px] bg-black select-none border-b border-[#23252b] flex items-end">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <img
+            src={anime.banner || anime.poster}
+            alt={anime.title}
+            onError={(e) => {
+              if (anime?.poster && e.currentTarget.src !== anime.poster) {
+                e.currentTarget.src = anime.poster;
+              }
+            }}
+            className="w-full h-full object-cover object-center filter brightness-[0.38] transition-all duration-700"
+          />
+          {/* Soft edge gradients */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0b0c0e] via-[#0b0c0e]/75 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0b0c0e] via-[#0b0c0e]/85 to-transparent w-full md:w-3/4" />
+        </div>
 
         {/* Content Inside Banner */}
-        <div className="relative max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex flex-col justify-end pb-8 z-10">
+        <div className="relative max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 z-10">
           <div className="flex flex-col sm:flex-row sm:items-end gap-6">
             
             {/* Poster thumbnail */}
-            <div className="hidden sm:block w-36 md:w-44 aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 flex-shrink-0 bg-black">
+            <div className="w-32 sm:w-40 md:w-44 aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 flex-shrink-0 bg-black">
               <img
                 src={anime.poster}
                 alt={anime.title}
@@ -190,21 +205,28 @@ export default function AnimeDetailPage({
             <div className="flex-grow min-w-0">
               {/* Badges */}
               <div className="flex items-center gap-2 mb-2 flex-wrap">
-                <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#f47521] text-black font-black text-xs shadow-md">
-                  <Star className="w-3.5 h-3.5 fill-black" />
-                  {anime.score ? anime.score.toFixed(1) : '8.8'}
-                </span>
+                {anime.score > 0 && (
+                  <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#f47521] text-black font-black text-xs shadow-md">
+                    <Star className="w-3.5 h-3.5 fill-black" />
+                    {anime.score.toFixed(1)}
+                  </span>
+                )}
                 <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
                   isMovie ? 'bg-purple-900/80 border border-purple-500/40 text-purple-200' : 'bg-black/60 border border-white/10 text-white'
                 }`}>
                   {anime.type || (isMovie ? 'Película' : 'TV Anime')}
                 </span>
                 <span className="px-2.5 py-0.5 rounded-full bg-black/60 border border-white/10 text-xs text-gray-300">
-                  {anime.status || (isMovie ? 'Finalizado' : 'En Emisión')}
+                  {anime.status || 'Finalizado'}
                 </span>
                 <span className="px-2.5 py-0.5 rounded-full bg-black/60 border border-white/10 text-xs text-gray-300">
-                  {anime.year || '2024'}
+                  {isMovie ? '1 Episodio' : (anime.total_episodes === 1 ? '1 Episodio' : `${anime.total_episodes || episodeList.length} Episodios`)}
                 </span>
+                {anime.year && (
+                  <span className="px-2.5 py-0.5 rounded-full bg-black/60 border border-white/10 text-xs text-gray-300">
+                    {anime.year}
+                  </span>
+                )}
               </div>
 
               {/* Title */}
@@ -212,13 +234,20 @@ export default function AnimeDetailPage({
                 {anime.title}
               </h1>
               {anime.japanese_title && (
-                <p className="text-sm sm:text-base text-gray-400 font-medium italic mb-4">
+                <p className="text-sm sm:text-base text-gray-400 font-medium italic mb-2">
                   {anime.japanese_title}
                 </p>
               )}
 
+              {/* Little Description (Synopsis) */}
+              {anime.synopsis && (
+                <p className="text-xs sm:text-sm text-gray-300 line-clamp-3 md:line-clamp-4 max-w-3xl leading-relaxed mb-4 drop-shadow-sm font-medium">
+                  {anime.synopsis}
+                </p>
+              )}
+
               {/* Action Buttons */}
-              <div className="flex items-center gap-3 flex-wrap mt-4">
+              <div className="flex items-center gap-3 flex-wrap mt-2">
                 <button
                   onClick={() => onNavigate(`/media/${anime.id}/${firstEpNum}`)}
                   className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#f47521] hover:bg-[#ff8c3b] text-black font-black text-sm transition-all shadow-lg shadow-[#f47521]/30 hover:scale-105 active:scale-95 cursor-pointer"
@@ -228,9 +257,10 @@ export default function AnimeDetailPage({
                 </button>
 
                 {/* Watchlist dropdown */}
-                <div className="relative group">
+                <div className="relative group" ref={listMenuRef}>
                   <button
                     type="button"
+                    onClick={() => setShowListMenu((prev) => !prev)}
                     className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-bold border backdrop-blur-md transition-all cursor-pointer ${
                       watchlistStatus
                         ? 'bg-orange-500/20 border-[#f47521] text-[#f47521]'
@@ -244,13 +274,18 @@ export default function AnimeDetailPage({
                     <ChevronDown className="w-3.5 h-3.5 text-gray-400 ml-1" />
                   </button>
 
-                  <div className={`absolute left-0 mt-1 w-52 rounded-xl shadow-2xl py-1 hidden group-hover:block z-40 border ${
-                    isDark ? 'bg-[#181920] border-[#2b2e3b] text-white' : 'bg-white border-gray-200 text-gray-900'
+                  <div className={`absolute left-0 top-full mt-2 w-56 rounded-xl shadow-2xl py-1.5 z-50 border transition-all ${
+                    showListMenu ? 'block' : 'hidden group-hover:block'
+                  } ${
+                    isDark ? 'bg-[#181920] border-[#2b2e3b] text-white shadow-black/80' : 'bg-white border-gray-200 text-gray-900 shadow-xl'
                   }`}>
                     {LIST_STATUSES.map(({ id, label }) => (
                       <button
                         key={id}
-                        onClick={() => handleStatusChange(id)}
+                        onClick={() => {
+                          handleStatusChange(id);
+                          setShowListMenu(false);
+                        }}
                         className={`w-full text-left px-4 py-2.5 text-xs font-semibold flex items-center justify-between transition-colors ${
                           isDark ? 'hover:bg-[#23252b]' : 'hover:bg-gray-100'
                         }`}
@@ -261,7 +296,10 @@ export default function AnimeDetailPage({
                     ))}
                     {watchlistStatus && (
                       <button
-                        onClick={() => handleStatusChange('remove')}
+                        onClick={() => {
+                          handleStatusChange('remove');
+                          setShowListMenu(false);
+                        }}
                         className="w-full text-left px-4 py-2.5 text-xs font-semibold text-red-500 hover:bg-red-500/10 border-t border-gray-700/40"
                       >
                         Quitar de Mi Lista
@@ -388,7 +426,7 @@ export default function AnimeDetailPage({
                         title="Descargar capítulo"
                         onClick={(e) => {
                           e.stopPropagation();
-                          onDownloadCap?.(anime, ep.number, ep.downloads);
+                          onDownloadCap?.(anime, ep.number); // the modal fetches the episode's live mirrors
                         }}
                         className={`p-1.5 rounded-lg transition-colors ${
                           isDark ? 'hover:bg-[#23252b] hover:text-[#f47521]' : 'hover:bg-gray-100 hover:text-[#f47521]'
@@ -459,7 +497,7 @@ export default function AnimeDetailPage({
 
                 <div>
                   <span className="text-xs text-gray-400 block font-semibold">Estado</span>
-                  <span className="text-sm font-bold">{anime.status || 'En Emisión'}</span>
+                  <span className="text-sm font-bold">{anime.status || 'Finalizado'}</span>
                 </div>
 
                 <div>
@@ -469,12 +507,12 @@ export default function AnimeDetailPage({
 
                 <div>
                   <span className="text-xs text-gray-400 block font-semibold">Año de Estreno</span>
-                  <span className="text-sm font-bold">{anime.year || '2024'}</span>
+                  <span className="text-sm font-bold">{anime.year || '—'}</span>
                 </div>
 
                 <div>
                   <span className="text-xs text-gray-400 block font-semibold">Episodios Totales</span>
-                  <span className="text-sm font-bold">{isMovie ? '1 (Película)' : (anime.total_episodes || 12)}</span>
+                  <span className="text-sm font-bold">{isMovie ? '1 (Película)' : (anime.total_episodes || episodeList.length || '—')}</span>
                 </div>
               </div>
             </div>

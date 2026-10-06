@@ -28,17 +28,16 @@ services:
   anime-stream:
     build: .
     container_name: anime-stream
-    # 🔒 Al usar network_mode: "service:gluetun", todo el tráfico BitTorrent y HTTP
+    # 🔒 Al usar network_mode: "service:gluetun", todo el tráfico HTTP del servidor
     # pasa forzosamente por la VPN con Kill Switch automático en caso de caída.
     network_mode: "service:gluetun"
     depends_on:
       gluetun:
         condition: service_healthy
     volumes:
-      - ./downloads:/app/downloads
       - ./data:/app/data
     environment:
-      # PORT, DB_PATH, DOWNLOADS_DIR y GLUETUN_CONTROL_URL ya vienen del Dockerfile
+      # PORT, DB_PATH y GLUETUN_CONTROL_URL ya vienen del Dockerfile
       - GLUETUN_API_KEY=${GLUETUN_API_KEY}
       - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER:-custom}
       - VPN_TYPE=${VPN_TYPE:-wireguard}

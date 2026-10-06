@@ -3,16 +3,13 @@ import {
   Search,
   Bookmark,
   Clock,
-  Download,
   User as UserIcon,
   LogOut,
   SlidersHorizontal,
   X,
   Sun,
   Moon,
-  Flame,
-  ShieldCheck,
-  ShieldAlert
+  Flame
 } from 'lucide-react';
 
 // Values are animeav1.com /catalogo query params, passed through by the backend search.
@@ -40,9 +37,6 @@ export default function Navbar({
   onOpenProfile,
   onLogout,
   continueWatchingCount = 0,
-  activeDownloadsCount = 0,
-  vpnStatus = null,
-  onOpenVpnModal,
   theme = 'dark',
   onToggleTheme,
   onGoHome,
@@ -57,13 +51,21 @@ export default function Navbar({
     { id: 'home', label: 'Inicio', short: 'Inicio' },
     { id: 'continue', label: 'Siguiendo Viendo', short: 'Viendo', Icon: Clock, count: continueWatchingCount },
     { id: 'watchlist', label: 'Mi Lista', short: 'Lista', Icon: Bookmark },
-    { id: 'downloads', label: 'Torrent & Descargas', short: 'Torrent', Icon: Download, count: activeDownloadsCount, pulse: true },
   ];
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     setShowFilters(false);
-    onSearch(searchQuery, activeFilters);
+    if (activeCount > 0) {
+      const params = new URLSearchParams();
+      if (searchQuery.trim()) params.set('q', searchQuery.trim());
+      Object.entries(activeFilters).forEach(([k, v]) => {
+        if (v) params.set(k, v);
+      });
+      window.open(`/browse?${params.toString()}`, '_blank');
+      return;
+    }
+    onSearch(searchQuery, {});
   };
 
   const clearFilters = () => {
@@ -99,7 +101,7 @@ export default function Navbar({
 
           {/* Crunchyroll-style main category tabs */}
           <nav className="hidden md:flex items-center gap-1">
-            {tabs.map(({ id, label, Icon, count, pulse }) => (
+            {tabs.map(({ id, label, Icon, count }) => (
               <button
                 key={id}
                 type="button"
@@ -123,7 +125,7 @@ export default function Navbar({
                 {Icon && <Icon className="w-3.5 h-3.5 text-[#f47521]" />}
                 <span>{label}</span>
                 {count > 0 && (
-                  <span className={`px-1.5 py-0.2 text-[10px] font-bold rounded-full bg-[#f47521] text-black ${pulse ? 'animate-pulse' : ''}`}>
+                  <span className="px-1.5 py-0.2 text-[10px] font-bold rounded-full bg-[#f47521] text-black">
                     {count}
                   </span>
                 )}
@@ -211,27 +213,6 @@ export default function Navbar({
               </div>
             )}
           </form>
-
-          {/* Gluetun VPN Status Badge */}
-          <button
-            type="button"
-            onClick={onOpenVpnModal}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs font-bold transition-all cursor-pointer ${
-              vpnStatus?.connected
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'
-                : 'bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20'
-            }`}
-            title={vpnStatus?.connected ? `VPN Gluetun Conectado (${vpnStatus?.country || 'Protegido'})` : "Gluetun VPN - Clic para ver estado"}
-          >
-            {vpnStatus?.connected ? (
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            ) : (
-              <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
-            )}
-            <span className="hidden sm:inline text-[11px]">
-              {vpnStatus?.connected ? 'VPN Activo' : 'Gluetun VPN'}
-            </span>
-          </button>
 
           {/* Dark / Light Mode Toggle Button */}
           <button

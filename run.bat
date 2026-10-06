@@ -2,7 +2,7 @@
 title GoAnime FLV Streaming Platform
 echo ========================================================
 echo        🎌 GoAnime FLV Streaming Platform
-echo   Backend: Go + SQLite + BitTorrent Engine
+echo   Backend: Go + SQLite
 echo   Frontend: React + Tailwind (Crunchyroll Theme)
 echo ========================================================
 echo.

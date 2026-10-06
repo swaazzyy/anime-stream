@@ -6,14 +6,13 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
-	"time"
 
 	"anime-stream-backend/auth"
 	"anime-stream-backend/database"
 	"anime-stream-backend/providers"
-	"anime-stream-backend/torrent"
 )
 
 type credentials struct {
@@ -25,12 +24,6 @@ type credentials struct {
 type AuthResp struct {
 	Token string         `json:"token"`
 	User  *database.User `json:"user"`
-}
-
-type AddDownloadReq struct {
-	MagnetURI     string `json:"magnet_uri"`
-	AnimeTitle    string `json:"anime_title"`
-	EpisodeNumber int    `json:"episode_number"`
 }
 
 // WriteJSON is a helper to encode JSON responses
@@ -211,9 +204,20 @@ func HandleUpdatePassword(w http.ResponseWriter, r *http.Request) {
 	WriteJSON(w, http.StatusOK, map[string]string{"message": "Contraseña actualizada exitosamente"})
 }
 
+// listView drops the episode lists that catalog rows and search grids never show (One Piece alone is 1000+ entries).
+func listView(list []providers.Anime) []providers.Anime {
+	out := slices.Clone(list)
+	for i := range out {
+		out[i].Episodes = nil
+	}
+	return out
+}
+
 // Catalog & Anime Handlers
 func HandleCatalog(w http.ResponseWriter, r *http.Request) {
-	WriteJSON(w, http.StatusOK, providers.GetCatalogData())
+	c := providers.GetCatalogData()
+	c.HeroSlides, c.Trending, c.Popular, c.TopRated = listView(c.HeroSlides), listView(c.Trending), listView(c.Popular), listView(c.TopRated)
+	WriteJSON(w, http.StatusOK, c)
 }
 
 func HandleSearchAnime(w http.ResponseWriter, r *http.Request) {
@@ -229,7 +233,7 @@ func HandleSearchAnime(w http.ResponseWriter, r *http.Request) {
 		WriteError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	WriteJSON(w, http.StatusOK, results)
+	WriteJSON(w, http.StatusOK, listView(results))
 }
 
 func resolveAnime(id string) (*providers.Anime, error) {
@@ -288,9 +292,11 @@ func HandleGetEpisode(w http.ResponseWriter, r *http.Request) {
 	if mediaID := providers.ExtractMediaID(anime.Poster, anime.Banner); mediaID != "" {
 		thumbnail = fmt.Sprintf("%s/screenshots/%s/%d.jpg", providers.AnimeAV1CDNBase, mediaID, epNum)
 	}
+	duration := 1440
 	for _, ep := range anime.Episodes {
-		if ep.Number == epNum && ep.Thumbnail != "" {
-			thumbnail = ep.Thumbnail
+		if ep.Number == epNum {
+			thumbnail = cmp.Or(ep.Thumbnail, thumbnail)
+			duration = cmp.Or(ep.Duration, duration) // movies are listed at 7200
 		}
 	}
 	slug := anime.ID
@@ -302,7 +308,7 @@ func HandleGetEpisode(w http.ResponseWriter, r *http.Request) {
 		Number:    epNum,
 		Title:     fmt.Sprintf("Episodio %d", epNum),
 		Thumbnail: thumbnail,
-		Duration:  1440,
+		Duration:  duration,
 		Synopsis:  fmt.Sprintf("Capítulo %d de %s transmitido vía AnimeAV1 con servidores Zilla Networks, MEGA, UPNShare y Voe.", epNum, anime.Title),
 		Servers:   servers,
 		Downloads: downloads,
@@ -419,86 +425,4 @@ func HandleFavorites(w http.ResponseWriter, r *http.Request) {
 	default:
 		WriteError(w, http.StatusMethodNotAllowed, "Method not allowed")
 	}
-}
-
-// Torrent & Cap Download Handlers (registered only when torrent.GlobalEngine is up)
-func HandleTorrents(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		WriteJSON(w, http.StatusOK, torrent.GlobalEngine.GetAllTasks())
-
-	case http.MethodPost:
-		var req AddDownloadReq
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			WriteError(w, http.StatusBadRequest, "Invalid download request")
-			return
-		}
-
-		if req.MagnetURI == "" {
-			WriteError(w, http.StatusBadRequest, "magnet_uri required")
-			return
-		}
-		task, err := torrent.GlobalEngine.AddMagnetTask(userID(r), req.AnimeTitle, req.EpisodeNumber, req.MagnetURI)
-		if err != nil {
-			WriteError(w, http.StatusInternalServerError, "Failed to start download: "+err.Error())
-			return
-		}
-		WriteJSON(w, http.StatusCreated, task)
-
-	default:
-		WriteError(w, http.StatusMethodNotAllowed, "Method not allowed")
-	}
-}
-
-// HandleTorrentAction handles POST /api/torrents/{id}/{pause|resume}
-func HandleTorrentAction(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
-	switch r.PathValue("action") {
-	case "pause":
-		WriteJSON(w, http.StatusOK, map[string]bool{"paused": torrent.GlobalEngine.PauseTask(id)})
-	case "resume":
-		WriteJSON(w, http.StatusOK, map[string]bool{"resumed": torrent.GlobalEngine.ResumeTask(id)})
-	default:
-		WriteError(w, http.StatusBadRequest, "Invalid action")
-	}
-}
-
-func HandleDeleteTorrent(w http.ResponseWriter, r *http.Request) {
-	deleteFile := r.URL.Query().Get("delete_file") == "true"
-	WriteJSON(w, http.StatusOK, map[string]bool{"success": torrent.GlobalEngine.DeleteTask(r.PathValue("id"), deleteFile)})
-}
-
-func HandleStreamTorrent(w http.ResponseWriter, r *http.Request) {
-	task := torrent.GlobalEngine.GetTaskByID(r.PathValue("id"))
-	if task == nil {
-		WriteError(w, http.StatusNotFound, "Task not found")
-		return
-	}
-	// Video playback keeps one response open for minutes; lift the server's 60s WriteTimeout.
-	_ = http.NewResponseController(w).SetWriteDeadline(time.Time{})
-	torrent.GlobalEngine.StreamTaskFile(w, r, task)
-}
-
-func HandleDownloadTorrentFile(w http.ResponseWriter, r *http.Request) {
-	title := r.URL.Query().Get("title")
-	if title == "" {
-		title = "Anime_Episode"
-	}
-	epStr := r.URL.Query().Get("episode")
-	epNum, _ := strconv.Atoi(epStr)
-	if epNum <= 0 {
-		epNum = 1
-	}
-
-	content, filename, err := torrent.GenerateTorrentFileContent(title, epNum)
-	if err != nil {
-		WriteError(w, http.StatusInternalServerError, "Failed to generate torrent: "+err.Error())
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/x-bittorrent")
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
-	w.Header().Set("Content-Length", strconv.Itoa(len(content)))
-	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(content)
 }

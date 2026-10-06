@@ -10,7 +10,7 @@ async function request(endpoint, options = {}) {
     },
   });
 
-  const data = await res.json();
+  const data = await res.json().catch(() => ({})); // plain-text errors (e.g. "404 page not found") aren't JSON
   if (!res.ok) {
     throw new Error(data.error || `HTTP error ${res.status}`);
   }
@@ -37,9 +37,14 @@ export const api = {
   },
 
   getCurrentUser() {
-    const raw = localStorage.getItem('anime_user');
-    return raw ? JSON.parse(raw) : null;
+    try {
+      return JSON.parse(localStorage.getItem('anime_user'));
+    } catch {
+      return null; // corrupt entry: treat as logged out instead of crashing the app on load
+    }
   },
+
+  me: () => request('/auth/me'),
 
   async updateProfile(profileData) {
     const data = await request('/auth/profile', {
@@ -79,13 +84,6 @@ export const api = {
   getFavorites: () => request('/favorites'),
   toggleFavorite: (animeId, animeTitle, animePoster) =>
     post('/favorites', { anime_id: animeId, anime_title: animeTitle, anime_poster: animePoster }),
-
-  // Torrents & Downloads
-  getTorrents: () => request('/torrents'),
-  addDownload: (downloadData) => post('/torrents', downloadData),
-  pauseTorrent: (id) => request(`/torrents/${id}/pause`, { method: 'POST' }),
-  resumeTorrent: (id) => request(`/torrents/${id}/resume`, { method: 'POST' }),
-  deleteTorrent: (id, deleteFile = false) => request(`/torrents/${id}?delete_file=${deleteFile}`, { method: 'DELETE' }),
 
   // VPN & Gluetun Status
   getVpnStatus: () => request('/vpn/status'),
