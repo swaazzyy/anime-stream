@@ -9,12 +9,10 @@ import (
 	"slices"
 	"strconv"
 	"strings"
-	"time"
 
 	"anime-stream-backend/auth"
 	"anime-stream-backend/database"
 	"anime-stream-backend/providers"
-	"anime-stream-backend/torrent"
 )
 
 type credentials struct {
@@ -26,12 +24,6 @@ type credentials struct {
 type AuthResp struct {
 	Token string         `json:"token"`
 	User  *database.User `json:"user"`
-}
-
-type AddDownloadReq struct {
-	MagnetURI     string `json:"magnet_uri"`
-	AnimeTitle    string `json:"anime_title"`
-	EpisodeNumber int    `json:"episode_number"`
 }
 
 // WriteJSON is a helper to encode JSON responses
@@ -245,21 +237,6 @@ func HandleSearchAnime(w http.ResponseWriter, r *http.Request) {
 }
 
 func resolveAnime(id string) (*providers.Anime, error) {
-	if torrent.GlobalEngine != nil {
-		if task := torrent.GlobalEngine.GetTaskByID(id); task != nil {
-			return &providers.Anime{
-				ID:            task.ID,
-				Title:         task.AnimeTitle,
-				Type:          "Descarga Local AV1",
-				Status:        "Finalizado",
-				TotalEpisodes: 1,
-				Episodes:      []providers.Episode{{Number: task.EpisodeNumber, Title: fmt.Sprintf("Episodio %d", task.EpisodeNumber)}}, // the one local file
-				Poster:        "https://cdn.animeav1.com/covers/4444.jpg",
-				Synopsis:      fmt.Sprintf("Episodio %d descargado localmente en formato AV1 (.av1).", task.EpisodeNumber),
-			}, nil
-		}
-	}
-
 	anime, err := providers.GetAnimeByID(id)
 	if err == nil && anime != nil {
 		return anime, nil
@@ -304,31 +281,7 @@ func HandleGetEpisode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id := r.PathValue("id")
-	if torrent.GlobalEngine != nil {
-		if task := torrent.GlobalEngine.GetTaskByID(id); task != nil {
-			episode := providers.Episode{
-				Number:    task.EpisodeNumber,
-				Title:     fmt.Sprintf("Episodio %d [Local AV1]", task.EpisodeNumber),
-				Thumbnail: "https://cdn.animeav1.com/screenshots/4444/1.jpg",
-				Duration:  1440,
-				Synopsis:  fmt.Sprintf("Capítulo reproducido desde el almacenamiento local en formato .av1 (%s).", task.Name),
-				Servers: []providers.Server{
-					{
-						ID:         "local_av1_server",
-						Name:       "Reproductor Local (.av1)",
-						ServerType: "direct",
-						URL:        fmt.Sprintf("/api/torrents/%s/stream", task.ID),
-						Quality:    "1080p AV1",
-					},
-				},
-			}
-			WriteJSON(w, http.StatusOK, episode)
-			return
-		}
-	}
-
-	anime, err := resolveAnime(id)
+	anime, err := resolveAnime(r.PathValue("id"))
 	if err != nil {
 		WriteError(w, http.StatusNotFound, err.Error())
 		return
@@ -472,86 +425,4 @@ func HandleFavorites(w http.ResponseWriter, r *http.Request) {
 	default:
 		WriteError(w, http.StatusMethodNotAllowed, "Method not allowed")
 	}
-}
-
-// Torrent & Cap Download Handlers (registered only when torrent.GlobalEngine is up)
-func HandleTorrents(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		WriteJSON(w, http.StatusOK, torrent.GlobalEngine.GetAllTasks())
-
-	case http.MethodPost:
-		var req AddDownloadReq
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			WriteError(w, http.StatusBadRequest, "Invalid download request")
-			return
-		}
-
-		if req.MagnetURI == "" {
-			cleanTitle := url.QueryEscape(fmt.Sprintf("%s - %02d [AV1 1080p]", req.AnimeTitle, req.EpisodeNumber))
-			req.MagnetURI = fmt.Sprintf("magnet:?xt=urn:btih:3b245504fb5f3c478318134704090602f5eab35e&dn=%s", cleanTitle)
-		}
-		task, err := torrent.GlobalEngine.AddMagnetTask(userID(r), req.AnimeTitle, req.EpisodeNumber, req.MagnetURI)
-		if err != nil {
-			WriteError(w, http.StatusInternalServerError, "Failed to start download: "+err.Error())
-			return
-		}
-		WriteJSON(w, http.StatusCreated, task)
-
-	default:
-		WriteError(w, http.StatusMethodNotAllowed, "Method not allowed")
-	}
-}
-
-// HandleTorrentAction handles POST /api/torrents/{id}/{pause|resume}
-func HandleTorrentAction(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
-	switch r.PathValue("action") {
-	case "pause":
-		WriteJSON(w, http.StatusOK, map[string]bool{"paused": torrent.GlobalEngine.PauseTask(id)})
-	case "resume":
-		WriteJSON(w, http.StatusOK, map[string]bool{"resumed": torrent.GlobalEngine.ResumeTask(id)})
-	default:
-		WriteError(w, http.StatusBadRequest, "Invalid action")
-	}
-}
-
-func HandleDeleteTorrent(w http.ResponseWriter, r *http.Request) {
-	deleteFile := r.URL.Query().Get("delete_file") == "true"
-	WriteJSON(w, http.StatusOK, map[string]bool{"success": torrent.GlobalEngine.DeleteTask(r.PathValue("id"), deleteFile)})
-}
-
-func HandleStreamTorrent(w http.ResponseWriter, r *http.Request) {
-	task := torrent.GlobalEngine.GetTaskByID(r.PathValue("id"))
-	if task == nil {
-		WriteError(w, http.StatusNotFound, "Task not found")
-		return
-	}
-	// Video playback keeps one response open for minutes; lift the server's 60s WriteTimeout.
-	_ = http.NewResponseController(w).SetWriteDeadline(time.Time{})
-	torrent.GlobalEngine.StreamTaskFile(w, r, task)
-}
-
-func HandleDownloadTorrentFile(w http.ResponseWriter, r *http.Request) {
-	title := r.URL.Query().Get("title")
-	if title == "" {
-		title = "Anime_Episode"
-	}
-	epStr := r.URL.Query().Get("episode")
-	epNum, _ := strconv.Atoi(epStr)
-	if epNum <= 0 {
-		epNum = 1
-	}
-
-	content, filename, err := torrent.GenerateTorrentFileContent(title, epNum)
-	if err != nil {
-		WriteError(w, http.StatusInternalServerError, "Failed to generate torrent: "+err.Error())
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/x-bittorrent")
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
-	w.Header().Set("Content-Length", strconv.Itoa(len(content)))
-	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(content)
 }

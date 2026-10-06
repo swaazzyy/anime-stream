@@ -3,7 +3,6 @@ import {
   Search,
   Bookmark,
   Clock,
-  Download,
   User as UserIcon,
   LogOut,
   SlidersHorizontal,
@@ -38,7 +37,6 @@ export default function Navbar({
   onOpenProfile,
   onLogout,
   continueWatchingCount = 0,
-  activeDownloadsCount = 0,
   theme = 'dark',
   onToggleTheme,
   onGoHome,
@@ -53,7 +51,6 @@ export default function Navbar({
     { id: 'home', label: 'Inicio', short: 'Inicio' },
     { id: 'continue', label: 'Siguiendo Viendo', short: 'Viendo', Icon: Clock, count: continueWatchingCount },
     { id: 'watchlist', label: 'Mi Lista', short: 'Lista', Icon: Bookmark },
-    { id: 'downloads', label: 'Descargas', short: 'Descargas', Icon: Download, count: activeDownloadsCount, pulse: true },
   ];
 
   const handleSearchSubmit = (e) => {
@@ -104,7 +101,7 @@ export default function Navbar({
 
           {/* Crunchyroll-style main category tabs */}
           <nav className="hidden md:flex items-center gap-1">
-            {tabs.map(({ id, label, Icon, count, pulse }) => (
+            {tabs.map(({ id, label, Icon, count }) => (
               <button
                 key={id}
                 type="button"
@@ -128,7 +125,7 @@ export default function Navbar({
                 {Icon && <Icon className="w-3.5 h-3.5 text-[#f47521]" />}
                 <span>{label}</span>
                 {count > 0 && (
-                  <span className={`px-1.5 py-0.2 text-[10px] font-bold rounded-full bg-[#f47521] text-black ${pulse ? 'animate-pulse' : ''}`}>
+                  <span className="px-1.5 py-0.2 text-[10px] font-bold rounded-full bg-[#f47521] text-black">
                     {count}
                   </span>
                 )}

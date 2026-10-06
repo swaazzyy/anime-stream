@@ -507,12 +507,12 @@ export default function AnimeDetailPage({
 
                 <div>
                   <span className="text-xs text-gray-400 block font-semibold">Año de Estreno</span>
-                  <span className="text-sm font-bold">{anime.year || '2024'}</span>
+                  <span className="text-sm font-bold">{anime.year || '—'}</span>
                 </div>
 
                 <div>
                   <span className="text-xs text-gray-400 block font-semibold">Episodios Totales</span>
-                  <span className="text-sm font-bold">{isMovie ? '1 (Película)' : (anime.total_episodes || 12)}</span>
+                  <span className="text-sm font-bold">{isMovie ? '1 (Película)' : (anime.total_episodes || episodeList.length || '—')}</span>
                 </div>
               </div>
             </div>

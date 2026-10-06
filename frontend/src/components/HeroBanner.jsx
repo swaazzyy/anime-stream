@@ -48,7 +48,7 @@ export default function HeroBanner({ slides = [], onWatchEpisode, onOpenDetails,
         {/* Metadata & Genre Pills as shown in reference */}
         <div className="flex items-center gap-2 sm:gap-3 mb-2 flex-wrap">
           <span className="text-xs sm:text-sm font-semibold text-gray-400">
-            {current.type || 'TV Anime'} • {current.year || '1999'}
+            {current.type || 'TV Anime'}{current.year ? ` • ${current.year}` : ''}
           </span>
           {current.genres?.map((genre) => (
             <span

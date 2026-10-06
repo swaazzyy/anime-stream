@@ -85,13 +85,6 @@ export const api = {
   toggleFavorite: (animeId, animeTitle, animePoster) =>
     post('/favorites', { anime_id: animeId, anime_title: animeTitle, anime_poster: animePoster }),
 
-  // Torrents & Downloads
-  getTorrents: () => request('/torrents'),
-  addDownload: (downloadData) => post('/torrents', downloadData),
-  pauseTorrent: (id) => request(`/torrents/${encodeURIComponent(id)}/pause`, { method: 'POST' }),
-  resumeTorrent: (id) => request(`/torrents/${encodeURIComponent(id)}/resume`, { method: 'POST' }),
-  deleteTorrent: (id, deleteFile = false) => request(`/torrents/${encodeURIComponent(id)}?delete_file=${deleteFile}`, { method: 'DELETE' }),
-
   // VPN & Gluetun Status
   getVpnStatus: () => request('/vpn/status'),
 };

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Navbar from './components/Navbar';
 import HeroBanner from './components/HeroBanner';
 import ContinueWatchingRow from './components/ContinueWatchingRow';
@@ -8,7 +8,6 @@ import AnimeCard from './components/AnimeCard';
 import AnimeDetailPage from './pages/AnimeDetailPage';
 import WatchPage from './pages/WatchPage';
 import DownloadCapModal from './components/DownloadCapModal';
-import DownloadsView from './components/DownloadsView';
 import MyListView from './components/MyListView';
 import AuthModal from './components/AuthModal';
 import UserProfileModal from './components/UserProfileModal';
@@ -40,7 +39,7 @@ function parseCurrentRoute() {
   if (parts.length === 0 || parts[0] === 'home') {
     return { page: 'home', tab: 'home' };
   }
-  if (parts[0] === 'continue' || parts[0] === 'watchlist' || parts[0] === 'downloads') {
+  if (parts[0] === 'continue' || parts[0] === 'watchlist') {
     return { page: 'home', tab: parts[0] };
   }
   if ((parts[0] === 'media' || parts[0] === 'anime') && parts[1]) {
@@ -66,11 +65,11 @@ export default function App() {
   const [continueWatching, setContinueWatching] = useState([]);
   const [watchlistMap, setWatchlistMap] = useState({});
   const [user, setUser] = useState(api.getCurrentUser());
-  const [activeDownloadsCount, setActiveDownloadsCount] = useState(0);
 
   // Search
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState(null);
+  const searchSeq = useRef(0); // bumped by every search and navigation, so a slow stale search can't overwrite the page
   const [isSearching, setIsSearching] = useState(false);
 
   // Modals for actions
@@ -92,6 +91,7 @@ export default function App() {
   // Browser navigation history support (Back / Forward)
   useEffect(() => {
     const handlePopState = () => {
+      searchSeq.current++;
       setRoute(parseCurrentRoute());
       setSearchResults(null);
     };
@@ -106,6 +106,7 @@ export default function App() {
       setResumeProgress(0);
     }
     window.history.pushState({}, '', url);
+    searchSeq.current++;
     setRoute(parseCurrentRoute());
     setSearchResults(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -115,7 +116,6 @@ export default function App() {
     loadCatalog();
     loadContinueWatching();
     loadWatchlist();
-    loadTorrentsCount();
   };
 
   const loadCatalog = async () => {
@@ -144,16 +144,6 @@ export default function App() {
       setWatchlistMap(map);
     } catch (err) {
       console.error("Failed to fetch watchlist:", err);
-    }
-  };
-
-  const loadTorrentsCount = async () => {
-    try {
-      const tasks = await api.getTorrents();
-      const active = tasks?.filter(t => t.status === 'downloading').length || 0;
-      setActiveDownloadsCount(active);
-    } catch (err) {
-      console.error("Failed to fetch torrents count:", err);
     }
   };
 
@@ -186,6 +176,7 @@ export default function App() {
       setSearchResults(null);
       return;
     }
+    const seq = ++searchSeq.current;
     setIsSearching(true);
     setSearchResults([]); // shows the results panel (with spinner) while fetching
     if (route.page !== 'home' && route.page !== 'browse') {
@@ -194,11 +185,11 @@ export default function App() {
     }
     try {
       const results = await api.searchAnime(query?.trim() || '', filters);
-      setSearchResults(results || []);
+      if (seq === searchSeq.current) setSearchResults(results || []);
     } catch (err) {
       console.error("Search error:", err);
     } finally {
-      setIsSearching(false);
+      if (seq === searchSeq.current) setIsSearching(false);
     }
   };
 
@@ -273,11 +264,6 @@ export default function App() {
     }
   };
 
-  // Play local downloaded cap from Go torrent engine
-  const handlePlayLocalCap = (task) => {
-    navigate(`/media/${task.id || 'torrent'}/${task.episode_number || 1}`);
-  };
-
   const openDownloadModal = (anime, episodeNumber, opt) => {
     const downloadOptions = Array.isArray(opt) ? opt : (opt ? [opt] : []);
     setDownloadModalData({ anime, episodeNumber, downloadOptions });
@@ -306,7 +292,6 @@ export default function App() {
           loadAllData();
         }}
         continueWatchingCount={continueWatching.length}
-        activeDownloadsCount={activeDownloadsCount}
         theme={theme}
         onToggleTheme={toggleTheme}
       />
@@ -540,13 +525,6 @@ export default function App() {
             )}
 
             {/* Tab: TORRENT & DOWNLOADS */}
-            {route.tab === 'downloads' && (
-              <DownloadsView 
-                onPlayLocalCap={handlePlayLocalCap} 
-                theme={theme}
-              />
-            )}
-
           </>
         )}
       </main>
@@ -559,8 +537,6 @@ export default function App() {
           episodeNumber={downloadModalData.episodeNumber}
           downloadOptions={downloadModalData.downloadOptions}
           onClose={() => setDownloadModalData(null)}
-          onDownloadStarted={loadTorrentsCount}
-          onOpenDownloadsTab={() => navigate('/downloads')}
           theme={theme}
         />
       )}

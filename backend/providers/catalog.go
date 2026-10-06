@@ -55,7 +55,7 @@ type Server struct {
 
 type DownloadOption struct {
 	Name    string `json:"name"`
-	Type    string `json:"type"` // magnet, torrent_file, direct, direct_mp4
+	Type    string `json:"type"` // direct: a file-host mirror page listed by AnimeAV1
 	URL     string `json:"url"`
 	Size    string `json:"size"`
 	Quality string `json:"quality"`
@@ -186,7 +186,7 @@ func refreshCatalogFromNetwork() {
 	fetchOr := func(page int, order string) []Anime {
 		items, err := FetchAnimeAV1Catalog(page, order, "") // already enriched
 		if err != nil || len(items) == 0 {
-			return CuratedAnimeAV1
+			return slices.Clone(CuratedAnimeAV1) // a copy: the loop below writes into these lists
 		}
 		return items
 	}
@@ -194,7 +194,7 @@ func refreshCatalogFromNetwork() {
 	popular := fetchOr(1, "popular")
 	topRated := fetchOr(2, "popular")
 
-	heroSlides := []Anime{CuratedAnimeAV1[0]} // One Piece
+	heroSlides := []Anime{CuratedAnimeAV1[0]} // first curated entry leads the hero carousel
 	seen := map[string]bool{CuratedAnimeAV1[0].ID: true}
 	for _, a := range append(slices.Clone(popular), trending...) {
 		if len(heroSlides) < 5 && !seen[a.ID] {
