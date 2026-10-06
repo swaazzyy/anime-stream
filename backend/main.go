@@ -48,9 +48,11 @@ func main() {
 	port := getenv("PORT", "8080")
 
 	// 1. Initialize SQLite Database
-	db, err := database.InitDB(getenv("DB_PATH", "anime_stream.db"))
+	dbPath := getenv("DB_PATH", "anime_stream.db")
+	db, err := database.InitDB(dbPath)
 	if err != nil {
-		log.Fatalf("Fatal: Database initialization failed: %v", err)
+		// SQLite also creates -wal/-shm files next to the DB, so its folder must be writable, not just the file.
+		log.Fatalf("Fatal: Database initialization failed for %s: %v (its folder must be writable by this user; DB_PATH moves it)", dbPath, err)
 	}
 	defer db.Close()
 
