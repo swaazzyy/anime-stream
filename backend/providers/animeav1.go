@@ -279,6 +279,216 @@ var CuratedAnimeAV1 = []Anime{
 		Type:          "Película",
 		Studio:        "ufotable",
 	},
+	{
+		ID:            "kimetsu-no-yaiba",
+		Title:         "Kimetsu no Yaiba (Demon Slayer)",
+		JapaneseTitle: "鬼滅の刃",
+		Synopsis:      "Tanjirou Kamado emprende un viaje como cazador de demonios para vengar a su familia y encontrar una cura para su hermana Nezuko.",
+		Poster:        "https://cdn.animeav1.com/covers/250.jpg",
+		Banner:        "https://cdn.animeav1.com/backdrops/250.jpg",
+		Genres:        []string{"Acción", "Fantasía", "Histórico", "Shounen"},
+		Score:         8.8,
+		Status:        "Finalizado",
+		TotalEpisodes: 26,
+		Year:          2019,
+		Type:          "TV Anime",
+		Studio:        "ufotable",
+	},
+	{
+		ID:            "fullmetal-alchemist-brotherhood",
+		Title:         "Fullmetal Alchemist: Brotherhood",
+		JapaneseTitle: "鋼の錬金術師 FULLMETAL ALCHEMIST",
+		Synopsis:      "Los hermanos Edward y Alphonse Elric buscan la legendaria Piedra Filosofal para restaurar sus cuerpos tras un fallido experimento de transmutación humana.",
+		Poster:        "https://cdn.animeav1.com/covers/3.jpg",
+		Banner:        "https://cdn.animeav1.com/backdrops/3.jpg",
+		Genres:        []string{"Acción", "Aventura", "Drama", "Fantasía"},
+		Score:         9.2,
+		Status:        "Finalizado",
+		TotalEpisodes: 64,
+		Year:          2009,
+		Type:          "TV Anime",
+		Studio:        "Bones",
+	},
+	{
+		ID:            "sword-art-online",
+		Title:         "Sword Art Online",
+		JapaneseTitle: "ソードアート・オンライン",
+		Synopsis:      "Diez mil jugadores quedan atrapados en el juego de realidad virtual Sword Art Online, donde morir en el juego significa morir en la vida real.",
+		Poster:        "https://cdn.animeav1.com/covers/215.jpg",
+		Banner:        "https://cdn.animeav1.com/backdrops/215.jpg",
+		Genres:        []string{"Acción", "Aventura", "Fantasía", "Romance"},
+		Score:         8.3,
+		Status:        "Finalizado",
+		TotalEpisodes: 25,
+		Year:          2012,
+		Type:          "TV Anime",
+		Studio:        "A-1 Pictures",
+	},
+	{
+		ID:            "naruto",
+		Title:         "Naruto",
+		JapaneseTitle: "ナルト",
+		Synopsis:      "Naruto Uzumaki es un joven ninja que sueña con convertirse en el Hokage, el líder de su aldea, mientras lucha contra el rechazo de los aldeanos por llevar sellado al Zorro de Nueve Colas.",
+		Poster:        "https://cdn.animeav1.com/covers/195.jpg",
+		Banner:        "https://cdn.animeav1.com/backdrops/195.jpg",
+		Genres:        []string{"Acción", "Aventura", "Comedia", "Shounen"},
+		Score:         8.4,
+		Status:        "Finalizado",
+		TotalEpisodes: 220,
+		Year:          2002,
+		Type:          "TV Anime",
+		Studio:        "Studio Pierrot",
+	},
+	{
+		ID:            "naruto-shippuuden",
+		Title:         "Naruto Shippuden",
+		JapaneseTitle: "NARUTO -ナルト- 疾風伝",
+		Synopsis:      "Tras dos años y medio de entrenamiento con Jiraiya, Naruto regresa a la Aldea de la Hoja listo para enfrentar a la misteriosa organización Akatsuki y rescatar a Sasuke.",
+		Poster:        "https://cdn.animeav1.com/covers/196.jpg",
+		Banner:        "https://cdn.animeav1.com/backdrops/196.jpg",
+		Genres:        []string{"Acción", "Aventura", "Drama", "Shounen"},
+		Score:         8.7,
+		Status:        "Finalizado",
+		TotalEpisodes: 500,
+		Year:          2007,
+		Type:          "TV Anime",
+		Studio:        "Studio Pierrot",
+	},
+	{
+		ID:            "hunter-x-hunter-2011",
+		Title:         "Hunter x Hunter (2011)",
+		JapaneseTitle: "HUNTER×HUNTER",
+		Synopsis:      "Gon Freecss descubre que su padre está vivo y es un renombrado Cazador, por lo que decide tomar el peligroso examen para convertirse en Cazador y encontrarlo.",
+		Poster:        "https://cdn.animeav1.com/covers/198.jpg",
+		Banner:        "https://cdn.animeav1.com/backdrops/198.jpg",
+		Genres:        []string{"Acción", "Aventura", "Fantasía", "Shounen"},
+		Score:         9.1,
+		Status:        "Finalizado",
+		TotalEpisodes: 148,
+		Year:          2011,
+		Type:          "TV Anime",
+		Studio:        "Madhouse",
+	},
+	{
+		ID:            "tokyo-ghoul",
+		Title:         "Tokyo Ghoul",
+		JapaneseTitle: "東京喰種トーキョーグール",
+		Synopsis:      "Ken Kaneki sobrevive a un ataque de un ghoul mediante un trasplante de órganos que lo transforma en un híbrido mitad humano mitad ghoul.",
+		Poster:        "https://cdn.animeav1.com/covers/200.jpg",
+		Banner:        "https://cdn.animeav1.com/backdrops/200.jpg",
+		Genres:        []string{"Acción", "Horror", "Misterio", "Sobrenatural"},
+		Score:         8.5,
+		Status:        "Finalizado",
+		TotalEpisodes: 12,
+		Year:          2014,
+		Type:          "TV Anime",
+		Studio:        "Studio Pierrot",
+	},
+	{
+		ID:            "jujutsu-kaisen",
+		Title:         "Jujutsu Kaisen",
+		JapaneseTitle: "呪術廻戦",
+		Synopsis:      "Yuuji Itadori traga un dedo maldito que contiene al Rey de las Maldiciones, Ryomen Sukuna, ingresando al mundo de los hechiceros de Jujutsu.",
+		Poster:        "https://cdn.animeav1.com/covers/255.jpg",
+		Banner:        "https://cdn.animeav1.com/backdrops/255.jpg",
+		Genres:        []string{"Acción", "Fantasía", "Sobrenatural", "Shounen"},
+		Score:         8.9,
+		Status:        "Finalizado",
+		TotalEpisodes: 24,
+		Year:          2020,
+		Type:          "TV Anime",
+		Studio:        "MAPPA",
+	},
+	{
+		ID:            "chainsaw-man",
+		Title:         "Chainsaw Man",
+		JapaneseTitle: "チェンソーマン",
+		Synopsis:      "Denji vive en la pobreza pagando las deudas de su padre cazando demonios junto a Pochita, hasta que renace como el Demonio de la Motosierra.",
+		Poster:        "https://cdn.animeav1.com/covers/260.jpg",
+		Banner:        "https://cdn.animeav1.com/backdrops/260.jpg",
+		Genres:        []string{"Acción", "Comedia", "Horror", "Sobrenatural"},
+		Score:         8.8,
+		Status:        "Finalizado",
+		TotalEpisodes: 12,
+		Year:          2022,
+		Type:          "TV Anime",
+		Studio:        "MAPPA",
+	},
+	{
+		ID:            "cyberpunk-edgerunners",
+		Title:         "Cyberpunk: Edgerunners",
+		JapaneseTitle: "サイバーパンク エッジランナーズ",
+		Synopsis:      "En una distopía obsesionada con la tecnología y la modificación corporal, un joven callejero decide convertirse en un mercenario al margen de la ley.",
+		Poster:        "https://cdn.animeav1.com/covers/265.jpg",
+		Banner:        "https://cdn.animeav1.com/backdrops/265.jpg",
+		Genres:        []string{"Acción", "Ciencia Ficción", "Cyberpunk", "Drama"},
+		Score:         8.9,
+		Status:        "Finalizado",
+		TotalEpisodes: 10,
+		Year:          2022,
+		Type:          "TV Anime",
+		Studio:        "Studio Trigger",
+	},
+	{
+		ID:            "cowboy-bebop",
+		Title:         "Cowboy Bebop",
+		JapaneseTitle: "カウボーイビバップ",
+		Synopsis:      "Spike Spiegel y su ecléctica tripulación de cazarrecompensas viajan por el sistema solar a bordo de la nave Bebop atrapando criminales.",
+		Poster:        "https://cdn.animeav1.com/covers/270.jpg",
+		Banner:        "https://cdn.animeav1.com/backdrops/270.jpg",
+		Genres:        []string{"Acción", "Aventura", "Ciencia Ficción", "Espacio"},
+		Score:         9.0,
+		Status:        "Finalizado",
+		TotalEpisodes: 26,
+		Year:          1998,
+		Type:          "TV Anime",
+		Studio:        "Sunrise",
+	},
+	{
+		ID:            "neon-genesis-evangelion",
+		Title:         "Neon Genesis Evangelion",
+		JapaneseTitle: "新世紀エヴァンゲリオン",
+		Synopsis:      "En el año 2015, quince años después del Segundo Impacto, Shinji Ikari es reclutado por su padre para pilotar la unidad bio-mecánica Evangelion-01 y defender a la humanidad.",
+		Poster:        "https://cdn.animeav1.com/covers/275.jpg",
+		Banner:        "https://cdn.animeav1.com/backdrops/275.jpg",
+		Genres:        []string{"Acción", "Ciencia Ficción", "Drama", "Mecha", "Psicológico"},
+		Score:         8.9,
+		Status:        "Finalizado",
+		TotalEpisodes: 26,
+		Year:          1995,
+		Type:          "TV Anime",
+		Studio:        "Gainax",
+	},
+	{
+		ID:            "steins-gate",
+		Title:         "Steins;Gate",
+		JapaneseTitle: "シュタインズ・ゲート",
+		Synopsis:      "El autoproclamado científico loco Rintaro Okabe inventa un microondas capaz de enviar mensajes de texto al pasado, desatando consecuencias imprevistas en la línea temporal.",
+		Poster:        "https://cdn.animeav1.com/covers/280.jpg",
+		Banner:        "https://cdn.animeav1.com/backdrops/280.jpg",
+		Genres:        []string{"Ciencia Ficción", "Psicológico", "Suspenso", "Drama"},
+		Score:         9.1,
+		Status:        "Finalizado",
+		TotalEpisodes: 24,
+		Year:          2011,
+		Type:          "TV Anime",
+		Studio:        "White Fox",
+	},
+	{
+		ID:            "code-geass-hangyaku-no-lelouch",
+		Title:         "Code Geass: Hangyaku no Lelouch",
+		JapaneseTitle: "コードギアス 反逆のルルーシュ",
+		Synopsis:      "Lelouch Lamperouge obtiene el poder absoluto del Geass, que le permite doblegar la voluntad de cualquiera, y lidera una rebelión contra el Sacro Imperio de Britannia.",
+		Poster:        "https://cdn.animeav1.com/covers/285.jpg",
+		Banner:        "https://cdn.animeav1.com/backdrops/285.jpg",
+		Genres:        []string{"Acción", "Drama", "Mecha", "Militar", "Psicológico"},
+		Score:         9.0,
+		Status:        "Finalizado",
+		TotalEpisodes: 25,
+		Year:          2006,
+		Type:          "TV Anime",
+		Studio:        "Sunrise",
+	},
 }
 
 // AnimeAV1LatestCard represents the exact card format from the screenshot
@@ -604,6 +814,30 @@ func av1Type(catID string) string {
 	return "TV Anime"
 }
 
+// parseAV1Status parses the numerical or text status from AnimeAV1 HTML
+func parseAV1Status(html string) string {
+	if m := regexp.MustCompile(`status:(\d+)`).FindStringSubmatch(html); len(m) >= 2 {
+		switch m[1] {
+		case "0":
+			return "Finalizado"
+		case "1", "2":
+			return "En Emisión"
+		case "3":
+			return "Cancelado"
+		case "4":
+			return "Pausado"
+		}
+	}
+	lower := strings.ToLower(html)
+	if strings.Contains(lower, `status:"en emisión"`) || strings.Contains(lower, `status:"en emision"`) || strings.Contains(lower, `status:"airing"`) {
+		return "En Emisión"
+	}
+	if strings.Contains(lower, `status:"finalizado"`) || strings.Contains(lower, `status:"finished"`) {
+		return "Finalizado"
+	}
+	return "Finalizado"
+}
+
 // FetchAnimeAV1Catalog extracts full catalog pages from animeav1.com
 func FetchAnimeAV1Catalog(page int, order string, search string) ([]Anime, error) {
 	if page <= 0 {
@@ -665,12 +899,37 @@ func FetchAnimeAV1Filtered(q url.Values) ([]Anime, error) {
 			Poster:        fmt.Sprintf("%s/covers/%s.jpg", AnimeAV1CDNBase, rawID),
 			Banner:        fmt.Sprintf("%s/backdrops/%s.jpg", AnimeAV1CDNBase, rawID),
 			Score:         0,
-			Status:        "En Emisión",
+			Status:        "Finalizado",
 			TotalEpisodes: totalEps,
 			Year:          2024,
 			Type:          animeType,
 			Studio:        "AnimeAV1",
 		}
+
+		for _, c := range CuratedAnimeAV1 {
+			if c.ID == slug || Slugify(c.Title) == slug {
+				anime.Status = c.Status
+				if c.TotalEpisodes > 0 {
+					anime.TotalEpisodes = c.TotalEpisodes
+				}
+				if c.Score > 0 {
+					anime.Score = c.Score
+				}
+				if c.Year > 0 {
+					anime.Year = c.Year
+				}
+				break
+			}
+		}
+
+		if statusParam := q.Get("status"); statusParam != "" {
+			if statusParam == "emision" || statusParam == "proximamente" {
+				anime.Status = "En Emisión"
+			} else if statusParam == "finalizado" {
+				anime.Status = "Finalizado"
+			}
+		}
+
 		if isMovie {
 			anime.Status = "Finalizado"
 			anime.Episodes = []Episode{
@@ -837,6 +1096,11 @@ func FetchAnimeAV1Details(slugOrID string) (*Anime, error) {
 		}
 	}
 
+	status := parseAV1Status(html)
+	if isMovie {
+		status = "Finalizado"
+	}
+
 	anime := &Anime{
 		ID:            slug,
 		Title:         title,
@@ -846,7 +1110,7 @@ func FetchAnimeAV1Details(slugOrID string) (*Anime, error) {
 		Banner:        fmt.Sprintf("%s/backdrops/%s.jpg", AnimeAV1CDNBase, mediaID),
 		Genres:        genres,
 		Score:         score,
-		Status:        "Finalizado",
+		Status:        status,
 		TotalEpisodes: len(episodes),
 		Year:          2024,
 		Type:          animeType,
@@ -855,8 +1119,21 @@ func FetchAnimeAV1Details(slugOrID string) (*Anime, error) {
 		Episodes:      episodes,
 		fetchedAt:     time.Now(),
 	}
-	if !isMovie && len(episodes) > 0 && episodes[len(episodes)-1].Number >= 12 {
-		anime.Status = "En Emisión"
+
+	// Override with curated metadata if available (preserves exact status, year, studio for classics like SNK)
+	for _, c := range CuratedAnimeAV1 {
+		if c.ID == slug || Slugify(c.Title) == slug {
+			if c.Status != "" {
+				anime.Status = c.Status
+			}
+			if c.Year > 0 {
+				anime.Year = c.Year
+			}
+			if c.Studio != "" && c.Studio != "AnimeAV1" {
+				anime.Studio = c.Studio
+			}
+			break
+		}
 	}
 	return anime, nil
 }

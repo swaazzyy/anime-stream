@@ -162,10 +162,20 @@ func enrichFromKnown(a *Anime) bool {
 		if src.Score > 0 {
 			a.Score = src.Score
 		}
+		if src.Status != "" {
+			a.Status = src.Status
+		}
+		if src.Year > 0 {
+			a.Year = src.Year
+		}
+		if src.Studio != "" && src.Studio != "AnimeAV1" {
+			a.Studio = src.Studio
+		}
 		return true
 	}
 	if a.Type == "Película" || strings.Contains(strings.ToLower(a.Title), "movie") || strings.Contains(strings.ToLower(a.Title), "película") {
 		a.TotalEpisodes = 1
+		a.Status = "Finalizado"
 		return true
 	}
 	return false
@@ -196,6 +206,15 @@ func refreshCatalogFromNetwork() {
 	cacheMutex.Lock()
 	for _, list := range [][]Anime{trending, popular, topRated} {
 		for i := range list {
+			if existing, ok := animeCache[list[i].ID]; ok && len(existing.Episodes) > 0 {
+				if list[i].Status == "" || list[i].Status == "Finalizado" {
+					list[i].Status = existing.Status
+				}
+				if list[i].TotalEpisodes == 0 {
+					list[i].TotalEpisodes = existing.TotalEpisodes
+				}
+				continue
+			}
 			animeCache[list[i].ID] = &list[i]
 		}
 	}
@@ -270,7 +289,7 @@ func SearchAnime(query string, filters url.Values) ([]Anime, error) {
 		if err != nil && strings.Contains(err.Error(), "no media matches") {
 			return results, nil // valid filter combo with zero results
 		}
-		return filtered, err
+		return EnrichAnimeWithRealDetails(filtered), err
 	}
 	if query == "" {
 		return CuratedAnimeAV1, nil
@@ -336,7 +355,7 @@ func SearchAnime(query string, filters url.Values) ([]Anime, error) {
 		}
 	}
 
-	return results, nil
+	return EnrichAnimeWithRealDetails(results), nil
 }
 
 // GetAnimeByID finds anime by ID in AnimeAV1 live details, cache, Curated, or AniList fallback

@@ -600,17 +600,11 @@ export default function App() {
       <footer className={`border-t py-8 text-center text-xs transition-colors ${
         isDark ? 'border-[#23252b] bg-[#0c0d10] text-gray-500' : 'border-gray-200 bg-white text-gray-600'
       }`}>
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-center gap-4">
           <div className="flex items-center gap-2">
             <Flame className="w-4 h-4 text-[#f47521]" />
             <span className={`font-bold ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>GoAnime</span>
             <span>— Tu portal favorito para ver anime online</span>
-          </div>
-
-          <div className={`flex items-center gap-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-            <span>Servidores AnimeAV1 Voe, UPNShare, MP4Upload</span>
-            <span>•</span>
-            <span>Reproducción en Alta Definición</span>
           </div>
         </div>
       </footer>

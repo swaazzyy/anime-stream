@@ -94,7 +94,7 @@ export default function AnimeCard({
               ? 'PELÍCULA'
               : (showEpisodeCount && anime.total_episodes
                   ? (anime.total_episodes === 1 ? '1 Cap' : `${anime.total_episodes} Caps`)
-                  : (anime.status || 'Serie TV'))}
+                  : (anime.status || 'Finalizado'))}
           </span>
           <span className="px-1.5 py-0.5 rounded bg-black/70 backdrop-blur-sm border border-white/5 text-[#f47521]">
             {anime.type || 'TV'}

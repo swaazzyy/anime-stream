@@ -145,9 +145,9 @@ func convertMediaToAnime(m *anilistMedia) Anime {
 	// Clean HTML from description
 	cleanDesc := cleanHTML(m.Description)
 
-	status := "Finished"
+	status := "Finalizado"
 	if m.Status == "RELEASING" {
-		status = "Airing"
+		status = "En Emisión"
 	}
 
 	score := m.AverageScore / 10.0

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   Play, 
   Star, 
@@ -35,6 +35,18 @@ export default function AnimeDetailPage({
   const [watchlistStatus, setWatchlistStatus] = useState('');
   const [isFavorite, setIsFavorite] = useState(false);
   const [selectedTab, setSelectedTab] = useState('episodes');
+  const [showListMenu, setShowListMenu] = useState(false);
+  const listMenuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (listMenuRef.current && !listMenuRef.current.contains(e.target)) {
+        setShowListMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (!slug) return;
@@ -159,20 +171,22 @@ export default function AnimeDetailPage({
       </div>
 
       {/* Cinematic Backdrop Hero Banner */}
-      <div className="relative w-full min-h-[380px] sm:min-h-[440px] md:min-h-[480px] overflow-hidden bg-black select-none border-b border-[#23252b] flex items-end">
-        <img
-          src={anime.banner || anime.poster}
-          alt={anime.title}
-          onError={(e) => {
-            if (anime?.poster && e.currentTarget.src !== anime.poster) {
-              e.currentTarget.src = anime.poster;
-            }
-          }}
-          className="absolute inset-0 w-full h-full object-cover object-center filter brightness-[0.38] transition-all duration-700 pointer-events-none"
-        />
-        {/* Soft edge gradients */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0b0c0e] via-[#0b0c0e]/75 to-transparent pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0b0c0e] via-[#0b0c0e]/85 to-transparent w-full md:w-3/4 pointer-events-none" />
+      <div className="relative w-full min-h-[380px] sm:min-h-[440px] md:min-h-[480px] bg-black select-none border-b border-[#23252b] flex items-end">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <img
+            src={anime.banner || anime.poster}
+            alt={anime.title}
+            onError={(e) => {
+              if (anime?.poster && e.currentTarget.src !== anime.poster) {
+                e.currentTarget.src = anime.poster;
+              }
+            }}
+            className="w-full h-full object-cover object-center filter brightness-[0.38] transition-all duration-700"
+          />
+          {/* Soft edge gradients */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0b0c0e] via-[#0b0c0e]/75 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0b0c0e] via-[#0b0c0e]/85 to-transparent w-full md:w-3/4" />
+        </div>
 
         {/* Content Inside Banner */}
         <div className="relative max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 z-10">
@@ -203,7 +217,7 @@ export default function AnimeDetailPage({
                   {anime.type || (isMovie ? 'Película' : 'TV Anime')}
                 </span>
                 <span className="px-2.5 py-0.5 rounded-full bg-black/60 border border-white/10 text-xs text-gray-300">
-                  {anime.status || (isMovie ? 'Finalizado' : 'En Emisión')}
+                  {anime.status || 'Finalizado'}
                 </span>
                 <span className="px-2.5 py-0.5 rounded-full bg-black/60 border border-white/10 text-xs text-gray-300">
                   {isMovie ? '1 Episodio' : (anime.total_episodes === 1 ? '1 Episodio' : `${anime.total_episodes || episodeList.length} Episodios`)}
@@ -243,9 +257,10 @@ export default function AnimeDetailPage({
                 </button>
 
                 {/* Watchlist dropdown */}
-                <div className="relative group">
+                <div className="relative group" ref={listMenuRef}>
                   <button
                     type="button"
+                    onClick={() => setShowListMenu((prev) => !prev)}
                     className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-bold border backdrop-blur-md transition-all cursor-pointer ${
                       watchlistStatus
                         ? 'bg-orange-500/20 border-[#f47521] text-[#f47521]'
@@ -259,13 +274,18 @@ export default function AnimeDetailPage({
                     <ChevronDown className="w-3.5 h-3.5 text-gray-400 ml-1" />
                   </button>
 
-                  <div className={`absolute left-0 mt-1 w-52 rounded-xl shadow-2xl py-1 hidden group-hover:block z-40 border ${
-                    isDark ? 'bg-[#181920] border-[#2b2e3b] text-white' : 'bg-white border-gray-200 text-gray-900'
+                  <div className={`absolute left-0 top-full mt-2 w-56 rounded-xl shadow-2xl py-1.5 z-50 border transition-all ${
+                    showListMenu ? 'block' : 'hidden group-hover:block'
+                  } ${
+                    isDark ? 'bg-[#181920] border-[#2b2e3b] text-white shadow-black/80' : 'bg-white border-gray-200 text-gray-900 shadow-xl'
                   }`}>
                     {LIST_STATUSES.map(({ id, label }) => (
                       <button
                         key={id}
-                        onClick={() => handleStatusChange(id)}
+                        onClick={() => {
+                          handleStatusChange(id);
+                          setShowListMenu(false);
+                        }}
                         className={`w-full text-left px-4 py-2.5 text-xs font-semibold flex items-center justify-between transition-colors ${
                           isDark ? 'hover:bg-[#23252b]' : 'hover:bg-gray-100'
                         }`}
@@ -276,7 +296,10 @@ export default function AnimeDetailPage({
                     ))}
                     {watchlistStatus && (
                       <button
-                        onClick={() => handleStatusChange('remove')}
+                        onClick={() => {
+                          handleStatusChange('remove');
+                          setShowListMenu(false);
+                        }}
                         className="w-full text-left px-4 py-2.5 text-xs font-semibold text-red-500 hover:bg-red-500/10 border-t border-gray-700/40"
                       >
                         Quitar de Mi Lista
@@ -474,7 +497,7 @@ export default function AnimeDetailPage({
 
                 <div>
                   <span className="text-xs text-gray-400 block font-semibold">Estado</span>
-                  <span className="text-sm font-bold">{anime.status || 'En Emisión'}</span>
+                  <span className="text-sm font-bold">{anime.status || 'Finalizado'}</span>
                 </div>
 
                 <div>
