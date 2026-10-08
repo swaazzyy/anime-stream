@@ -18,9 +18,7 @@ Plataforma de streaming de anime con arquitectura **Cliente-Servidor** de alto r
   - Todas las peticiones del servidor (scraping de AnimeAV1 y AniList) viajan obligatoriamente a través del túnel VPN cifrado. Los reproductores embebidos los carga tu navegador directamente.
 - **Kill Switch Integrado**:
   - Si el enlace VPN cae o se desconecta inesperadamente, el firewall a nivel de red corta de inmediato toda salida de paquetes a internet. **Cero fugas de tu IP real ante tu ISP**.
-- **Monitor de Seguridad en Tiempo Real en la Interfaz Web**:
-  - **Insignia en el Navbar**: Escudo verde (`Protegido por VPN`) o ámbar (`Conexión Directa`) visible en todo momento.
-  - **Modal de Estado VPN**: Consulta en vivo la IP pública saliente, el país asignado, el protocolo activo (WireGuard / OpenVPN) y el estado del servicio de control.
+- **Endpoint de Estado VPN** (`GET /api/vpn/status`): IP pública saliente, país, protocolo activo (WireGuard / OpenVPN) y si el tráfico de GoAnime sale realmente por el túnel.
 - **Compatibilidad con Múltiples Proveedores**:
   - Soporte para Mullvad, ProtonVPN, NordVPN, Surfshark, PIA, Windscribe, CyberGhost y túneles personalizados WireGuard / OpenVPN.
 
@@ -35,35 +33,28 @@ Plataforma de streaming de anime con arquitectura **Cliente-Servidor** de alto r
 
 ### 4. 🗄️ Base de Datos SQLite Integrada (`anime_stream.db`)
 - **Gestión de usuarios y perfiles**: Registro, login, tokens de sesión y almacenamiento de avatar.
-- **"Siguiendo Viendo" (Still Viewing / Continue Watching)**: Guarda el segundo exacto de reproducción de cada anime y capítulo, duración total y estado de completado. Sincronización automática cada 5 segundos mientras el usuario mira el anime.
+- **"Siguiendo Viendo" (Still Viewing / Continue Watching)**: Guarda el último capítulo de cada anime, el progreso y el estado de completado. Los reproductores embebidos no exponen su posición, así que el progreso es el tiempo que la página del capítulo permanece visible (se sincroniza cada 15 segundos).
 - **"Para el Futuro / Mi Lista" (Watchlist)**: Organización por pestañas: *Por Ver (Para el Futuro)*, *Viendo (Siguiendo)*, *Completados* y *Favoritos*.
 
 ### 5. 📥 Descarga de Capítulos
 - **🌐 Servidores Espejo de AnimeAV1**: Enlaces reales de descarga (Mega, 1Fichier, TransferIt, MP4Upload) obtenidos en vivo para cada episodio.
 
-### 6. 📺 Servidores AnimeAV1 y Reproductor Cinema
+### 6. 📺 Servidores AnimeAV1
 - **Selector de Servidores con Logotipo Oficial AnimeAV1**:
-  - Distintivo visual oficial en turquesa (`#3CECD6`) en la barra de control del reproductor.
-  - Selección dinámica de servidores por episodio: AnimeAV1 UPNShare (Sub / Latino / HD), Mega Cloud, Streamwish, Streamtape, Mp4Upload.
+  - Distintivo visual oficial en turquesa (`#3CECD6`) junto al selector de servidores.
+  - Servidores obtenidos en vivo para cada episodio (Sub / Latino según disponibilidad), reproducidos en el reproductor embebido de cada servidor.
 - **Miniaturas de Episodios Precisas y Resistentes**:
   - Vinculación directa con capturas reales de alta definición provistas por la red de contenidos de AnimeAV1 mediante ID numérico.
   - Sistema de respaldo automático (`onError`) en cascada para evitar imágenes rotas o errores de CDN.
-- **Reproductor Cinema estilo Crunchyroll**:
-  - Controles completos: Play/Pausa, barra de búsqueda con scrubber fluido, control de volumen con mute instantáneo.
-  - **Saltar Intro (+85s)** como en Crunchyroll.
-  - Velocidad de reproducción ajustable (0.75x, 1x, 1.25x, 1.5x, 2x).
-  - Modo pantalla completa (`F` o botón dedicado).
-  - Atajos de teclado: Espacio para pausar, flechas para avanzar/retroceder 10s.
 
 ### 7. 🎨 Frontend Cómodo y Movimientos Suaves
 - Tema visual oscuro Crunchyroll (`#0b0c0e`, acentos anaranjados `#f47521`, tarjetas `#14151a`) con alternador a Modo Claro (Light Mode).
 - **Carrusel Billboard Principal**: Anime destacado con sinopsis en español, puntuación, géneros y botón de inicio rápido.
-- **Fila "Siguiendo Viendo"**: Miniaturas con barra de progreso naranja y tiempo restante estimado (ej. "14 min restantes"). Reanudación en el segundo exacto.
+- **Fila "Siguiendo Viendo"**: Miniaturas con barra de progreso naranja y tiempo restante estimado (ej. "14 min restantes"). Un clic reanuda el último capítulo visto.
 - **Fichas Técnicas Detalladas**: Tráilers oficiales de YouTube embebidos, sinopsis, géneros y listado interactivo de episodios.
 
 ---
 
-=======
 ## 📁 Estructura del Proyecto
 
 ```
@@ -71,6 +62,7 @@ f:\anime-stream\
 ├── anime-stream-linux-amd64       # Binario standalone para Linux 64-bit (x86_64)
 ├── anime-stream-linux-arm64       # Binario standalone para Linux ARM64 (aarch64)
 ├── anime-stream-windows-amd64.exe # Binario standalone para Windows 64-bit
+├── run.bat                        # Lanzador para Windows (inicia el servidor y abre el navegador)
 ├── Dockerfile                     # Imagen contenedor ligera en Alpine Linux
 ├── docker-compose.yml             # Stack de despliegue multi-contenedor con Gluetun VPN
 ├── .env.example                   # Plantilla de credenciales y configuración VPN
@@ -80,7 +72,7 @@ f:\anime-stream\
 │   │   └── vpn.go       # Cliente de telemetría y estado con Gluetun Control API
 │   ├── auth/            # JWT tokens y hashing bcrypt
 │   ├── database/        # Driver SQLite puro en Go, migraciones de usuarios y avatares
-│   ├── providers/       # Servidores AnimeAV1, catálogo, miniaturas y búsqueda Jikan
+│   ├── providers/       # Servidores AnimeAV1, catálogo, miniaturas y metadatos de AniList
 │   ├── dist/            # Build de Vite (`npm run build`) empaquetado con embed.FS
 │   └── main.go          # Servidor HTTP, CORS, ruteo SPA y embed
 ├── frontend/
@@ -124,7 +116,7 @@ Esta modalidad garantiza que **el 100% de las conexiones del servidor pasen por 
    ```bash
    docker compose logs -f gluetun
    ```
-   Abre tu navegador en `http://localhost:8080`. Verás el escudo de seguridad en **Verde (`VPN Activa`)** con tu IP pública protegida y país de salida.
+   Abre tu navegador en `http://localhost:8080`. Para confirmar que el tráfico sale por la VPN, consulta `http://localhost:8080/api/vpn/status`: debe responder `"connected": true` con la IP pública y el país de salida.
 
 ---
 
@@ -153,7 +145,7 @@ Abre tu navegador en `http://localhost:8080` (o `http://<IP-DE-TU-SERVIDOR>:8080
 
 ### 🪟 Opción 3: Ejecutable Standalone en Windows
 
-Haz doble clic en:
+Haz doble clic en `run.bat` (inicia el servidor y abre el navegador) o directamente en:
 ```
 anime-stream-windows-amd64.exe
 ```
@@ -178,7 +170,7 @@ PORT=3000 DB_PATH=/var/data/anime.db GLUETUN_CONTROL_URL=http://localhost:8000 .
 | :--- | :--- | :--- |
 | `PORT` | `8080` | Puerto en el que escucha el servidor web |
 | `DB_PATH` | `anime_stream.db` | Ruta del archivo de base de datos SQLite |
-| `GLUETUN_CONTROL_URL` | `http://localhost:8000` | URL del servidor de control de Gluetun para telemetría de VPN |
+| `GLUETUN_CONTROL_URL` | `http://127.0.0.1:8000` | URL del servidor de control de Gluetun para telemetría de VPN |
 | `GLUETUN_API_KEY` | *(vacío)* | Clave `X-API-Key` de la API de control (Gluetun ≥ v3.39.1 la exige); debe coincidir con la de Gluetun |
 | `FRONTEND_DIST` | *(embebido)* | Ruta opcional a una carpeta dist externa si se desea sobrescribir el frontend |
 
