@@ -57,6 +57,10 @@ func HandleRegister(w http.ResponseWriter, r *http.Request) {
 		WriteError(w, http.StatusBadRequest, "Username and password required")
 		return
 	}
+	if len(req.Password) < 4 { // same minimum as HandleUpdatePassword
+		WriteError(w, http.StatusBadRequest, "Password must be at least 4 characters")
+		return
+	}
 
 	hash, err := auth.HashPassword(req.Password)
 	if err != nil {

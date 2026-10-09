@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Bookmark, Trash2, Play } from 'lucide-react';
 import { api } from '../services/api';
 
-export default function MyListView({ onSelectAnime, onWatchEpisode, theme = 'dark' }) {
+export default function MyListView({ onSelectAnime, onWatchEpisode, onWatchlistUpdated, theme = 'dark' }) {
   const isDark = theme === 'dark';
   const [activeFilter, setActiveFilter] = useState('all');
   const [watchlist, setWatchlist] = useState([]);
@@ -34,6 +34,7 @@ export default function MyListView({ onSelectAnime, onWatchEpisode, theme = 'dar
         await api.toggleFavorite(item.anime_id, item.anime_title, item.anime_poster);
       } else {
         await api.removeFromWatchlist(item.anime_id);
+        onWatchlistUpdated?.(); // keep App's bookmark icons in sync
       }
       loadData();
     } catch (err) {

@@ -256,7 +256,9 @@ func init() {
 				cacheMutex.Unlock()
 			}
 		}
+		cacheMutex.RLock()
 		log.Printf("AnimeAV1 catalog preloaded into cache (%d items)", len(animeCache))
+		cacheMutex.RUnlock()
 
 		ticker := time.NewTicker(10 * time.Minute)
 		for range ticker.C {
@@ -289,7 +291,7 @@ func SearchAnime(query string, filters url.Values) ([]Anime, error) {
 		if err != nil && strings.Contains(err.Error(), "no media matches") {
 			return results, nil // valid filter combo with zero results
 		}
-		return EnrichAnimeWithRealDetails(filtered), err
+		return filtered, err // FetchAnimeAV1Filtered already enriched it
 	}
 	if query == "" {
 		return CuratedAnimeAV1, nil

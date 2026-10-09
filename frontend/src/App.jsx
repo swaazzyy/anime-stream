@@ -33,7 +33,8 @@ function parseCurrentRoute() {
       if (val) filters[k] = val;
     });
     const q = searchParams.get('q') || searchParams.get('search') || '';
-    return { page: 'browse', query: q, filters };
+    // nothing to search (bare /browse): show home instead of an empty page
+    if (q || Object.keys(filters).length) return { page: 'browse', query: q, filters };
   }
 
   if (parts.length === 0 || parts[0] === 'home') {
@@ -246,9 +247,12 @@ export default function App() {
     try {
       if (isSaved) {
         await api.removeFromWatchlist(anime.id);
-        const copy = { ...watchlistMap };
-        delete copy[anime.id];
-        setWatchlistMap(copy);
+        // functional updates: another toggle may have finished while this request was in flight
+        setWatchlistMap((prev) => {
+          const copy = { ...prev };
+          delete copy[anime.id];
+          return copy;
+        });
       } else {
         await api.setWatchlistItem({
           anime_id: anime.id,
@@ -257,7 +261,7 @@ export default function App() {
           status: 'plan_to_watch',
           score: Math.round(anime.score || 0),
         });
-        setWatchlistMap({ ...watchlistMap, [anime.id]: 'plan_to_watch' });
+        setWatchlistMap((prev) => ({ ...prev, [anime.id]: 'plan_to_watch' }));
       }
     } catch (err) {
       console.error("Failed to toggle watchlist:", err);
@@ -520,6 +524,7 @@ export default function App() {
               <MyListView
                 onSelectAnime={handleSelectAnime}
                 onWatchEpisode={handleWatchEpisode}
+                onWatchlistUpdated={loadWatchlist}
                 theme={theme}
               />
             )}

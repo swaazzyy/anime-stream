@@ -165,10 +165,6 @@ func convertMediaToAnime(m *anilistMedia) Anime {
 
 	// Build episodes with exported images
 	episodes := make([]Episode, 0, eps)
-	totalEps := eps
-	if totalEps > 48 {
-		totalEps = 24 // limit for fast initial response
-	}
 
 	// Map any available streamingEpisode images by index
 	streamImgMap := make(map[int]string)
@@ -183,7 +179,7 @@ func convertMediaToAnime(m *anilistMedia) Anime {
 		}
 	}
 
-	for i := 1; i <= totalEps; i++ {
+	for i := 1; i <= eps; i++ {
 		epThumbnail := banner
 		if img, ok := streamImgMap[i]; ok {
 			epThumbnail = img

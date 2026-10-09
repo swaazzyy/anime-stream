@@ -222,7 +222,7 @@ export default function AnimeDetailPage({
                 <span className="px-2.5 py-0.5 rounded-full bg-black/60 border border-white/10 text-xs text-gray-300">
                   {isMovie ? '1 Episodio' : (anime.total_episodes === 1 ? '1 Episodio' : `${anime.total_episodes || episodeList.length} Episodios`)}
                 </span>
-                {anime.year && (
+                {anime.year > 0 && (
                   <span className="px-2.5 py-0.5 rounded-full bg-black/60 border border-white/10 text-xs text-gray-300">
                     {anime.year}
                   </span>
