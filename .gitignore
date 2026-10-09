@@ -1,6 +1,4 @@
-# Local runtime data: the SQLite DB holds user accounts (password hashes); downloads are large video files.
+# Local runtime data: the SQLite DB holds user accounts (password hashes).
 *.db
 *.db-shm
 *.db-wal
-downloads/
-scratch/

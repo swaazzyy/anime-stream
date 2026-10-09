@@ -84,7 +84,4 @@ export const api = {
   getFavorites: () => request('/favorites'),
   toggleFavorite: (animeId, animeTitle, animePoster) =>
     post('/favorites', { anime_id: animeId, anime_title: animeTitle, anime_poster: animePoster }),
-
-  // VPN & Gluetun Status
-  getVpnStatus: () => request('/vpn/status'),
 };

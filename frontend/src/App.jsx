@@ -226,7 +226,6 @@ export default function App() {
   };
 
   // Resume from Continue Watching
-  // (Legacy anime IDs are normalized by the backend when history is saved and at startup.)
   const handleResumeContinueWatching = (item) => {
     navigate(`/media/${item.anime_id || item.id}/${item.episode_number ?? 1}`, { progress: item.progress_seconds || 0 });
   };
@@ -528,8 +527,6 @@ export default function App() {
                 theme={theme}
               />
             )}
-
-            {/* Tab: TORRENT & DOWNLOADS */}
           </>
         )}
       </main>

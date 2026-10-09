@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	_ "modernc.org/sqlite"
@@ -134,13 +133,6 @@ func InitDB(dbPath string) (*sql.DB, error) {
 	// Add avatar column if it doesn't exist
 	_, _ = db.Exec("ALTER TABLE users ADD COLUMN avatar TEXT DEFAULT '';")
 
-	// Clean up and normalize legacy non-slug IDs in watch_history and watchlist.
-	// (Match by ID only: a title match would also rewrite the other "Alicization" seasons.)
-	_, _ = db.Exec(`UPDATE watch_history SET anime_id = 'sword-art-online-alicization-war-of-underworld' WHERE anime_id = '108759';`)
-	_, _ = db.Exec(`UPDATE watch_history SET anime_id = 'dororo' WHERE anime_id = 'accion' AND anime_title = 'Dororo';`)
-	_, _ = db.Exec(`UPDATE watchlist SET anime_id = 'sword-art-online-alicization-war-of-underworld' WHERE anime_id = '108759';`)
-	_, _ = db.Exec(`UPDATE watchlist SET anime_id = 'dororo' WHERE anime_id = 'accion' AND anime_title = 'Dororo';`)
-
 	log.Println("SQLite database initialized successfully at", dbPath)
 	return db, nil
 }
@@ -201,13 +193,6 @@ func UpdateUserPasswordHash(userID int64, passwordHash string) error {
 
 // WatchHistory methods (Still Viewing / Continue Watching)
 func SaveWatchProgress(userID int64, h WatchHistory) error {
-	// Normalize known anime IDs
-	if h.AnimeID == "108759" {
-		h.AnimeID = "sword-art-online-alicization-war-of-underworld"
-	} else if h.AnimeID == "accion" && strings.Contains(strings.ToLower(h.AnimeTitle), "dororo") {
-		h.AnimeID = "dororo"
-	}
-
 	query := `
 	INSERT INTO watch_history (user_id, anime_id, anime_title, anime_poster, episode_number, episode_title, progress_seconds, duration_seconds, completed, updated_at)
 	VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)

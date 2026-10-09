@@ -82,16 +82,7 @@ export default function WatchPage({
           const n = s.name?.toLowerCase() || '';
           return !n.includes('nativo') && !n.includes('zilla') && !n.includes('streamtape') && !n.includes('mega cloud');
         });
-        const list = validServers.length > 0 ? validServers : servers;
-
-        // Prioritize Voe server as the principal server
-        list.sort((a, b) => {
-          const aVoe = ((a.name || '') + (a.url || '') + (a.id || '')).toLowerCase().includes('voe');
-          const bVoe = ((b.name || '') + (b.url || '') + (b.id || '')).toLowerCase().includes('voe');
-          if (aVoe && !bVoe) return -1;
-          if (!aVoe && bVoe) return 1;
-          return 0;
-        });
+        const list = validServers.length > 0 ? validServers : servers; // the backend already lists Voe first
 
         setEpisodeData({ ...epData, servers: list });
         setSelectedServer(list[0] ?? null);

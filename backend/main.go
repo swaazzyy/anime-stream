@@ -82,9 +82,6 @@ func main() {
 	mux.HandleFunc("/api/watchlist", api.HandleWatchlist)
 	mux.HandleFunc("/api/favorites", api.HandleFavorites)
 
-	// VPN & Gluetun status route
-	mux.HandleFunc("GET /api/vpn/status", api.HandleVPNStatus)
-
 	// Frontend is embedded at build time (vite builds straight into backend/dist); FRONTEND_DIST overrides it with a folder on disk.
 	distFS, _ := fs.Sub(embeddedDist, "dist")
 	if dir := os.Getenv("FRONTEND_DIST"); dir != "" {
