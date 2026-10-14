@@ -48,13 +48,13 @@ export default function DownloadCapModal({
 
         {/* Modal Header */}
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-3 rounded-xl bg-[#f47521]/15 text-[#f47521]">
+          <div className="p-3 rounded-xl bg-[#22c55e]/15 text-[#22c55e]">
             <Download className="w-6 h-6" />
           </div>
           <div>
             <h3 className="text-lg font-black tracking-tight flex items-center gap-2">
               <span>Descargar Episodio {episodeNumber}</span>
-              {loading && <Loader2 className="w-4 h-4 animate-spin text-[#f47521]" />}
+              {loading && <Loader2 className="w-4 h-4 animate-spin text-[#22c55e]" />}
             </h3>
             <p className={`text-xs font-semibold ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
               {animeTitle}
@@ -74,8 +74,8 @@ export default function DownloadCapModal({
               key={opt.url}
               className={`p-4 rounded-xl border transition-all flex items-center justify-between gap-3 ${
                 isDark
-                  ? 'bg-[#1a1c24] border-[#2b2e3b] hover:border-[#f47521]/50'
-                  : 'bg-gray-50 border-gray-200 hover:border-[#f47521]/50'
+                  ? 'bg-[#1a1c24] border-[#2b2e3b] hover:border-[#22c55e]/50'
+                  : 'bg-gray-50 border-gray-200 hover:border-[#22c55e]/50'
               }`}
             >
               <div className="min-w-0 flex-1">
@@ -93,7 +93,7 @@ export default function DownloadCapModal({
                 href={opt.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-lg font-extrabold text-xs transition-all shadow-md active:scale-95 bg-[#f47521] hover:bg-[#ff8c3b] text-black"
+                className="flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-lg font-extrabold text-xs transition-all shadow-md active:scale-95 bg-[#22c55e] hover:bg-[#4ade80] text-black"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
                 <span>Abrir</span>

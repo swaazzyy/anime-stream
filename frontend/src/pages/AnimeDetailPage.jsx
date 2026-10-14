@@ -108,7 +108,7 @@ export default function AnimeDetailPage({
   if (loading) {
     return (
       <div className={`min-h-[70vh] flex flex-col items-center justify-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
-        <div className="w-12 h-12 border-4 border-[#f47521] border-t-transparent rounded-full animate-spin mb-4" />
+        <div className="w-12 h-12 border-4 border-[#22c55e] border-t-transparent rounded-full animate-spin mb-4" />
         <p className="text-sm font-bold text-gray-400">Cargando detalles de {slug}...</p>
       </div>
     );
@@ -122,7 +122,7 @@ export default function AnimeDetailPage({
         <p className="text-sm text-gray-400 mb-6">{error || "El contenido solicitado no existe o no está disponible."}</p>
         <button
           onClick={() => onNavigate('/')}
-          className="px-6 py-2.5 rounded-xl bg-[#f47521] hover:bg-[#ff8c3b] text-black font-extrabold text-sm transition-all"
+          className="px-6 py-2.5 rounded-xl bg-[#22c55e] hover:bg-[#4ade80] text-black font-extrabold text-sm transition-all"
         >
           Volver al Inicio
         </button>
@@ -159,13 +159,13 @@ export default function AnimeDetailPage({
         <div className="max-w-7xl mx-auto flex items-center gap-2">
           <button
             onClick={() => onNavigate('/')}
-            className="hover:text-[#f47521] flex items-center gap-1 font-semibold transition-colors"
+            className="hover:text-[#22c55e] flex items-center gap-1 font-semibold transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Inicio</span>
           </button>
           <ChevronRight className="w-3.5 h-3.5 text-gray-600" />
-          <span className="text-[#f47521] font-bold">Anime</span>
+          <span className="text-[#22c55e] font-bold">Anime</span>
           <ChevronRight className="w-3.5 h-3.5 text-gray-600" />
           <span className="font-semibold truncate max-w-xs sm:max-w-md">{anime.title}</span>
         </div>
@@ -207,7 +207,7 @@ export default function AnimeDetailPage({
               {/* Badges */}
               <div className="flex items-center gap-2 mb-2 flex-wrap">
                 {anime.score > 0 && (
-                  <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#f47521] text-black font-black text-xs shadow-md">
+                  <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#22c55e] text-black font-black text-xs shadow-md">
                     <Star className="w-3.5 h-3.5 fill-black" />
                     {anime.score.toFixed(1)}
                   </span>
@@ -251,7 +251,7 @@ export default function AnimeDetailPage({
               <div className="flex items-center gap-3 flex-wrap mt-2">
                 <button
                   onClick={() => onNavigate(`/media/${anime.id}/${firstEpNum}`)}
-                  className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#f47521] hover:bg-[#ff8c3b] text-black font-black text-sm transition-all shadow-lg shadow-[#f47521]/30 hover:scale-105 active:scale-95 cursor-pointer"
+                  className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#22c55e] hover:bg-[#4ade80] text-black font-black text-sm transition-all shadow-lg shadow-[#22c55e]/30 hover:scale-105 active:scale-95 cursor-pointer"
                 >
                   <Play className="w-4 h-4 fill-black ml-0.5" />
                   <span>{isMovie ? 'Ver Película Completa' : (firstEpNum === 0 ? 'Ver Episodio 0' : `Ver Episodio ${firstEpNum}`)}</span>
@@ -264,11 +264,11 @@ export default function AnimeDetailPage({
                     onClick={() => setShowListMenu((prev) => !prev)}
                     className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-bold border backdrop-blur-md transition-all cursor-pointer ${
                       watchlistStatus
-                        ? 'bg-orange-500/20 border-[#f47521] text-[#f47521]'
+                        ? 'bg-green-500/20 border-[#22c55e] text-[#22c55e]'
                         : 'bg-black/60 hover:bg-black/80 text-white border-white/15'
                     }`}
                   >
-                    <Bookmark className={`w-4 h-4 ${watchlistStatus ? 'fill-[#f47521]' : ''}`} />
+                    <Bookmark className={`w-4 h-4 ${watchlistStatus ? 'fill-[#22c55e]' : ''}`} />
                     <span>
                       {LIST_STATUSES.find((s) => s.id === watchlistStatus)?.short || '+ Mi Lista'}
                     </span>
@@ -292,7 +292,7 @@ export default function AnimeDetailPage({
                         }`}
                       >
                         <span>{label}</span>
-                        {watchlistStatus === id && <Check className="w-3.5 h-3.5 text-[#f47521]" />}
+                        {watchlistStatus === id && <Check className="w-3.5 h-3.5 text-[#22c55e]" />}
                       </button>
                     ))}
                     {watchlistStatus && (
@@ -339,7 +339,7 @@ export default function AnimeDetailPage({
             onClick={() => setSelectedTab('episodes')}
             className={`font-black text-base sm:text-lg flex items-center gap-2 pb-2 -mb-4 transition-colors border-b-2 cursor-pointer ${
               selectedTab === 'episodes'
-                ? 'border-[#f47521] text-[#f47521]'
+                ? 'border-[#22c55e] text-[#22c55e]'
                 : isDark ? 'border-transparent text-gray-400 hover:text-white' : 'border-transparent text-gray-500 hover:text-gray-900'
             }`}
           >
@@ -351,7 +351,7 @@ export default function AnimeDetailPage({
             onClick={() => setSelectedTab('details')}
             className={`font-black text-base sm:text-lg flex items-center gap-2 pb-2 -mb-4 transition-colors border-b-2 cursor-pointer ${
               selectedTab === 'details'
-                ? 'border-[#f47521] text-[#f47521]'
+                ? 'border-[#22c55e] text-[#22c55e]'
                 : isDark ? 'border-transparent text-gray-400 hover:text-white' : 'border-transparent text-gray-500 hover:text-gray-900'
             }`}
           >
@@ -370,8 +370,8 @@ export default function AnimeDetailPage({
                   key={ep.number}
                   className={`group relative rounded-xl overflow-hidden border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer flex flex-col justify-between ${
                     isDark
-                      ? 'bg-[#14151a] border-[#23252b] hover:border-[#f47521]/60 hover:shadow-black/50'
-                      : 'bg-white border-gray-200 hover:border-[#f47521]/60 shadow-sm'
+                      ? 'bg-[#14151a] border-[#23252b] hover:border-[#22c55e]/60 hover:shadow-black/50'
+                      : 'bg-white border-gray-200 hover:border-[#22c55e]/60 shadow-sm'
                   }`}
                   onClick={() => onNavigate(`/media/${anime.id}/${ep.number}`)}
                 >
@@ -392,7 +392,7 @@ export default function AnimeDetailPage({
 
                     {/* Hover Play Button */}
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
-                      <div className="w-11 h-11 rounded-full bg-[#f47521] flex items-center justify-center text-black shadow-lg transform group-hover:scale-110 transition-transform">
+                      <div className="w-11 h-11 rounded-full bg-[#22c55e] flex items-center justify-center text-black shadow-lg transform group-hover:scale-110 transition-transform">
                         <Play className="w-5 h-5 fill-black ml-0.5" />
                       </div>
                     </div>
@@ -403,7 +403,7 @@ export default function AnimeDetailPage({
                     </span>
 
                     {/* Episode Number badge */}
-                    <span className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/80 text-[11px] font-extrabold text-[#f47521] border border-white/10">
+                    <span className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/80 text-[11px] font-extrabold text-[#22c55e] border border-white/10">
                       {isMovie ? 'Película' : (ep.number === 0 ? 'E0' : `E${ep.number}`)}
                     </span>
                   </div>
@@ -411,7 +411,7 @@ export default function AnimeDetailPage({
                   {/* Meta */}
                   <div className="p-3.5 flex flex-col justify-between flex-grow">
                     <div>
-                      <h4 className={`font-bold text-sm line-clamp-1 group-hover:text-[#f47521] transition-colors ${
+                      <h4 className={`font-bold text-sm line-clamp-1 group-hover:text-[#22c55e] transition-colors ${
                         isDark ? 'text-white' : 'text-gray-900'
                       }`}>
                         {isMovie ? 'Película Completa' : ep.title}
@@ -431,7 +431,7 @@ export default function AnimeDetailPage({
                           onDownloadCap?.(anime, ep.number); // the modal fetches the episode's live mirrors
                         }}
                         className={`p-1.5 rounded-lg transition-colors ${
-                          isDark ? 'hover:bg-[#23252b] hover:text-[#f47521]' : 'hover:bg-gray-100 hover:text-[#f47521]'
+                          isDark ? 'hover:bg-[#23252b] hover:text-[#22c55e]' : 'hover:bg-gray-100 hover:text-[#22c55e]'
                         }`}
                       >
                         <Download className="w-3.5 h-3.5" />

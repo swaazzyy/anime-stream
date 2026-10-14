@@ -1,0 +1,5 @@
+# The image only needs the prebuilt Linux binary: send just those (~24 MB) instead of the whole repo,
+# .git history and local SQLite data included (~240 MB).
+*
+!anime-stream-linux-amd64
+!anime-stream-linux-arm64

@@ -80,12 +80,12 @@ export default function Navbar({
             className="flex items-center gap-2 text-left group focus:outline-none cursor-pointer"
             title="Ir al Inicio de GoAnime"
           >
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#f47521] to-[#ff9e58] flex items-center justify-center shadow-md shadow-[#f47521]/30 group-hover:scale-105 transition-transform">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#22c55e] to-[#86efac] flex items-center justify-center shadow-md shadow-[#22c55e]/30 group-hover:scale-105 transition-transform">
               <Flame className="w-5 h-5 text-black fill-black" />
             </div>
             <div className="flex items-center">
               <span className="font-black text-2xl tracking-tight">
-                Go<span className="text-[#f47521]">Anime</span>
+                Go<span className="text-[#22c55e]">Anime</span>
               </span>
             </div>
           </button>
@@ -106,17 +106,17 @@ export default function Navbar({
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors ${
                   currentTab === id
                     ? isDark 
-                      ? 'text-white bg-[#1e2029] border border-[#f47521]/40' 
-                      : 'text-[#f47521] bg-orange-50 border border-orange-200 shadow-xs'
+                      ? 'text-white bg-[#1e2029] border border-[#22c55e]/40' 
+                      : 'text-[#22c55e] bg-green-50 border border-green-200 shadow-xs'
                     : isDark
                       ? 'text-gray-400 hover:text-white hover:bg-[#14151a]'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                 }`}
               >
-                {Icon && <Icon className="w-3.5 h-3.5 text-[#f47521]" />}
+                {Icon && <Icon className="w-3.5 h-3.5 text-[#22c55e]" />}
                 <span>{label}</span>
                 {count > 0 && (
-                  <span className="px-1.5 py-0.2 text-[10px] font-bold rounded-full bg-[#f47521] text-black">
+                  <span className="px-1.5 py-0.2 text-[10px] font-bold rounded-full bg-[#22c55e] text-black">
                     {count}
                   </span>
                 )}
@@ -132,8 +132,8 @@ export default function Navbar({
           <form onSubmit={handleSearchSubmit} className="relative flex items-center">
             <div className={`flex items-center rounded-full border transition-all duration-200 px-3 py-1.5 w-44 sm:w-60 md:w-72 shadow-inner ${
               isDark 
-                ? 'bg-[#14151a] border-[#23252b] focus-within:border-[#f47521]/60' 
-                : 'bg-gray-100 border-gray-200 focus-within:border-[#f47521]/60'
+                ? 'bg-[#14151a] border-[#23252b] focus-within:border-[#22c55e]/60' 
+                : 'bg-gray-100 border-gray-200 focus-within:border-[#22c55e]/60'
             }`}>
               <Search className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
               <input
@@ -159,7 +159,7 @@ export default function Navbar({
                 onClick={() => setShowFilters(!showFilters)}
                 className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold transition-colors ${
                   showFilters
-                    ? 'bg-[#f47521] text-black'
+                    ? 'bg-[#22c55e] text-black'
                     : isDark 
                       ? 'bg-[#23252b] hover:bg-[#2e313b] text-gray-300' 
                       : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
@@ -168,7 +168,7 @@ export default function Navbar({
               >
                 <SlidersHorizontal className="w-3 h-3" />
                 <span className="hidden sm:inline">Filtros</span>
-                {activeCount > 0 && <span className="text-[10px] bg-black/80 text-[#f47521] rounded-full px-1.5">{activeCount}</span>}
+                {activeCount > 0 && <span className="text-[10px] bg-black/80 text-[#22c55e] rounded-full px-1.5">{activeCount}</span>}
               </button>
             </div>
 
@@ -182,7 +182,7 @@ export default function Navbar({
                     <select
                       value={filters[key] || ''}
                       onChange={(e) => setFilters({ ...filters, [key]: e.target.value })}
-                      className={`w-40 rounded-lg border px-2 py-1.5 text-xs focus:outline-none focus:border-[#f47521] ${
+                      className={`w-40 rounded-lg border px-2 py-1.5 text-xs focus:outline-none focus:border-[#22c55e] ${
                         isDark ? 'bg-[#0b0c0e] border-[#23252b] text-white' : 'bg-gray-50 border-gray-300 text-gray-900'
                       }`}
                     >
@@ -197,7 +197,7 @@ export default function Navbar({
                   }`}>
                     Limpiar
                   </button>
-                  <button type="submit" className="flex-1 py-2 rounded-lg text-xs font-extrabold bg-[#f47521] hover:bg-[#ff8c3b] text-black">
+                  <button type="submit" className="flex-1 py-2 rounded-lg text-xs font-extrabold bg-[#22c55e] hover:bg-[#4ade80] text-black">
                     Aplicar
                   </button>
                 </div>
@@ -230,7 +230,7 @@ export default function Navbar({
                   isDark ? 'text-white' : 'text-gray-900'
                 }`}
               >
-                <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-[#f47521] shadow-md flex-shrink-0 bg-[#1e2029] flex items-center justify-center">
+                <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-[#22c55e] shadow-md flex-shrink-0 bg-[#1e2029] flex items-center justify-center">
                   {user.avatar ? (
                     <img
                       src={user.avatar}
@@ -239,7 +239,7 @@ export default function Navbar({
                       onError={(e) => { e.currentTarget.style.display = 'none'; }}
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-[#f47521] to-purple-600 flex items-center justify-center font-bold text-black text-xs">
+                    <div className="w-full h-full bg-gradient-to-br from-[#22c55e] to-purple-600 flex items-center justify-center font-bold text-black text-xs">
                       {user.username ? user.username.slice(0, 2).toUpperCase() : 'U'}
                     </div>
                   )}
@@ -262,7 +262,7 @@ export default function Navbar({
           ) : (
             <button
               onClick={onOpenAuth}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#f47521] hover:bg-[#ff8c3b] text-black font-extrabold text-xs transition-colors shadow-md shadow-[#f47521]/20"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#22c55e] hover:bg-[#4ade80] text-black font-extrabold text-xs transition-colors shadow-md shadow-[#22c55e]/20"
             >
               <UserIcon className="w-3.5 h-3.5 text-black" />
               <span>Acceder</span>
@@ -290,12 +290,12 @@ export default function Navbar({
             }}
             className={`px-3 py-1.5 rounded text-xs font-medium flex items-center gap-1 ${
               currentTab === id 
-                ? 'text-[#f47521] font-bold' 
+                ? 'text-[#22c55e] font-bold' 
                 : isDark ? 'text-gray-400' : 'text-gray-600'
             }`}
           >
             <span>{short}</span>
-            {count > 0 && <span className="text-[10px] bg-[#f47521] text-black rounded-full px-1">{count}</span>}
+            {count > 0 && <span className="text-[10px] bg-[#22c55e] text-black rounded-full px-1">{count}</span>}
           </button>
         ))}
       </div>

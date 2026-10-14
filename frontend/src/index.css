@@ -11,9 +11,9 @@
     --text-primary: #f3f4f6;
     --text-secondary: #9ca3af;
     --text-muted: #6b7280;
-    --accent: #f47521;
-    --accent-hover: #ff8c3b;
-    --accent-glow: rgba(244, 117, 33, 0.25);
+    --accent: #22c55e;
+    --accent-hover: #4ade80;
+    --accent-glow: rgba(34, 197, 94, 0.25);
   }
 
   html.light {
@@ -26,9 +26,9 @@
     --text-primary: #0f172a;
     --text-secondary: #334155;
     --text-muted: #64748b;
-    --accent: #f47521;
-    --accent-hover: #d95e0b;
-    --accent-glow: rgba(244, 117, 33, 0.2);
+    --accent: #22c55e;
+    --accent-hover: #16a34a;
+    --accent-glow: rgba(34, 197, 94, 0.2);
   }
 
   body {

@@ -14,7 +14,7 @@ export default function EpisodeBlocks({ episodes, current, dark = true, onJump, 
   const last = episodes.at(-1).number;
 
   const pill = (active) => `px-3 py-1 rounded-full text-xs font-bold transition-colors cursor-pointer ${
-    active ? 'bg-[#f47521] text-black' : dark ? 'bg-white/10 text-gray-300 hover:bg-white/20' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+    active ? 'bg-[#22c55e] text-black' : dark ? 'bg-white/10 text-gray-300 hover:bg-white/20' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
   }`;
 
   return (
@@ -39,7 +39,7 @@ export default function EpisodeBlocks({ episodes, current, dark = true, onJump, 
             required
             placeholder="Ir al cap #"
             aria-label="Ir al episodio número"
-            className={`w-28 px-3 py-1 rounded-full text-xs font-bold border focus:outline-none focus:border-[#f47521] ${
+            className={`w-28 px-3 py-1 rounded-full text-xs font-bold border focus:outline-none focus:border-[#22c55e] ${
               dark ? 'bg-white/5 border-white/10 text-white placeholder-gray-500' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'
             }`}
           />

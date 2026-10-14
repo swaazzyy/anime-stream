@@ -15,8 +15,8 @@ export default function AnimeCard({
     <div 
       className={`group relative flex flex-col rounded-xl overflow-hidden border transition-all duration-300 hover:shadow-xl hover:-translate-y-1.5 cursor-pointer ${
         isDark 
-          ? 'bg-[#14151a] border-[#23252b] hover:border-[#f47521]/60 hover:shadow-black/60' 
-          : 'bg-white border-gray-200 hover:border-[#f47521]/60 shadow-sm hover:shadow-gray-300'
+          ? 'bg-[#14151a] border-[#23252b] hover:border-[#22c55e]/60 hover:shadow-black/60' 
+          : 'bg-white border-gray-200 hover:border-[#22c55e]/60 shadow-sm hover:shadow-gray-300'
       }`}
       onClick={() => onSelect(anime)}
     >
@@ -40,8 +40,8 @@ export default function AnimeCard({
         {/* Top Badges: Score & Status */}
         <div className="absolute top-2 left-2 flex items-center gap-1.5 z-10">
           {anime.score > 0 && (
-            <span className="flex items-center gap-0.5 px-2 py-0.5 rounded bg-black/80 backdrop-blur-sm text-[#f47521] font-bold text-xs border border-white/10">
-              <Star className="w-3 h-3 fill-[#f47521]" />
+            <span className="flex items-center gap-0.5 px-2 py-0.5 rounded bg-black/80 backdrop-blur-sm text-[#22c55e] font-bold text-xs border border-white/10">
+              <Star className="w-3 h-3 fill-[#22c55e]" />
               {anime.score.toFixed(1)}
             </span>
           )}
@@ -57,8 +57,8 @@ export default function AnimeCard({
             }}
             className={`p-1.5 rounded-full backdrop-blur-sm transition-all ${
               isInWatchlist 
-                ? 'bg-[#f47521] text-black shadow-md' 
-                : 'bg-black/60 text-white hover:bg-[#f47521] hover:text-black opacity-0 group-hover:opacity-100'
+                ? 'bg-[#22c55e] text-black shadow-md' 
+                : 'bg-black/60 text-white hover:bg-[#22c55e] hover:text-black opacity-0 group-hover:opacity-100'
             }`}
           >
             {isInWatchlist ? <Check className="w-3.5 h-3.5" /> : <Bookmark className="w-3.5 h-3.5" />}
@@ -75,7 +75,7 @@ export default function AnimeCard({
               if (onWatchFirst) onWatchFirst(anime);
               else onSelect(anime);
             }}
-            className="w-12 h-12 rounded-full bg-[#f47521] text-black flex items-center justify-center shadow-lg shadow-[#f47521]/40 transform group-hover:scale-110 active:scale-95 transition-all"
+            className="w-12 h-12 rounded-full bg-[#22c55e] text-black flex items-center justify-center shadow-lg shadow-[#22c55e]/40 transform group-hover:scale-110 active:scale-95 transition-all"
           >
             <Play className="w-6 h-6 fill-black ml-0.5" />
           </button>
@@ -96,7 +96,7 @@ export default function AnimeCard({
                   ? (anime.total_episodes === 1 ? '1 Cap' : `${anime.total_episodes} Caps`)
                   : (anime.status || 'Finalizado'))}
           </span>
-          <span className="px-1.5 py-0.5 rounded bg-black/70 backdrop-blur-sm border border-white/5 text-[#f47521]">
+          <span className="px-1.5 py-0.5 rounded bg-black/70 backdrop-blur-sm border border-white/5 text-[#22c55e]">
             {anime.type || 'TV'}
           </span>
         </div>
@@ -105,7 +105,7 @@ export default function AnimeCard({
       {/* Card Content */}
       <div className="p-3 flex flex-col flex-grow justify-between">
         <div>
-          <h3 className={`font-bold text-sm line-clamp-1 group-hover:text-[#f47521] transition-colors ${
+          <h3 className={`font-bold text-sm line-clamp-1 group-hover:text-[#22c55e] transition-colors ${
             isDark ? 'text-white' : 'text-gray-900'
           }`}>
             {anime.title}

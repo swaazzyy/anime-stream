@@ -17,7 +17,7 @@ export default function ContinueWatchingRow({ history = [], onResume, onRemove, 
     }`}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Clock className="w-5 h-5 text-[#f47521]" />
+          <Clock className="w-5 h-5 text-[#22c55e]" />
           <h2 className={`text-xl sm:text-2xl font-black tracking-tight ${
             isDark ? 'text-white' : 'text-gray-900'
           }`}>
@@ -41,8 +41,8 @@ export default function ContinueWatchingRow({ history = [], onResume, onRemove, 
               key={`${item.anime_id}-${item.episode_number}`}
               className={`group relative flex-shrink-0 w-64 sm:w-72 rounded-xl overflow-hidden border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer ${
                 isDark 
-                  ? 'bg-[#14151a] border-[#23252b] hover:border-[#f47521]/60 hover:shadow-black/50' 
-                  : 'bg-white border-gray-200 hover:border-[#f47521]/60 shadow-sm hover:shadow-gray-300'
+                  ? 'bg-[#14151a] border-[#23252b] hover:border-[#22c55e]/60 hover:shadow-black/50' 
+                  : 'bg-white border-gray-200 hover:border-[#22c55e]/60 shadow-sm hover:shadow-gray-300'
               }`}
               onClick={() => onResume(item)}
             >
@@ -64,7 +64,7 @@ export default function ContinueWatchingRow({ history = [], onResume, onRemove, 
 
                 {/* Hover Play Button Overlay */}
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
-                  <div className="w-12 h-12 rounded-full bg-[#f47521] flex items-center justify-center text-black shadow-lg transform group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 rounded-full bg-[#22c55e] flex items-center justify-center text-black shadow-lg transform group-hover:scale-110 transition-transform">
                     <Play className="w-6 h-6 fill-black ml-0.5" />
                   </div>
                 </div>
@@ -82,10 +82,10 @@ export default function ContinueWatchingRow({ history = [], onResume, onRemove, 
                   <X className="w-3.5 h-3.5" />
                 </button>
 
-                {/* Progress Bar (Crunchyroll Signature Orange) */}
+                {/* Progress Bar */}
                 <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gray-700/80">
                   <div
-                    className="h-full bg-[#f47521] transition-all"
+                    className="h-full bg-[#22c55e] transition-all"
                     style={{ width: `${percentage}%` }}
                   />
                 </div>
@@ -93,7 +93,7 @@ export default function ContinueWatchingRow({ history = [], onResume, onRemove, 
 
               {/* Card Meta */}
               <div className="p-3">
-                <h3 className={`font-bold text-sm sm:text-base line-clamp-1 group-hover:text-[#f47521] transition-colors ${
+                <h3 className={`font-bold text-sm sm:text-base line-clamp-1 group-hover:text-[#22c55e] transition-colors ${
                   isDark ? 'text-white' : 'text-gray-900'
                 }`}>
                   {item.anime_title}

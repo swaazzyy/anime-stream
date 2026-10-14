@@ -275,7 +275,7 @@ export default function App() {
   const isDark = theme === 'dark';
 
   return (
-    <div className={`min-h-screen flex flex-col selection:bg-[#f47521] selection:text-black transition-colors duration-200 ${
+    <div className={`min-h-screen flex flex-col selection:bg-[#22c55e] selection:text-black transition-colors duration-200 ${
       isDark ? 'bg-[#0b0c0e] text-gray-100' : 'bg-[#f4f5f7] text-gray-900'
     }`}>
       {/* Top Navbar with GoAnime branding & Dark/Light toggle */}
@@ -311,7 +311,7 @@ export default function App() {
                 <h1 className={`text-2xl sm:text-3xl font-black flex items-center gap-2 ${
                   isDark ? 'text-white' : 'text-gray-900'
                 }`}>
-                  <Search className="w-6 h-6 text-[#f47521]" />
+                  <Search className="w-6 h-6 text-[#22c55e]" />
                   <span>{searchQuery.trim() ? `Resultados para "${searchQuery}"` : 'Resultados filtrados'}</span>
                 </h1>
                 <p className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -333,7 +333,7 @@ export default function App() {
 
             {isSearching ? (
               <div className="text-center py-16">
-                <div className="w-10 h-10 border-4 border-[#f47521] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                <div className="w-10 h-10 border-4 border-[#22c55e] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
                 <p className="text-gray-400 text-sm">Buscando en la base de datos de GoAnime...</p>
               </div>
             ) : searchResults.length === 0 ? (
@@ -436,7 +436,7 @@ export default function App() {
                   <h1 className={`text-2xl sm:text-3xl font-black flex items-center gap-3 ${
                     isDark ? 'text-white' : 'text-gray-900'
                   }`}>
-                    <Clock className="w-7 h-7 text-[#f47521]" />
+                    <Clock className="w-7 h-7 text-[#22c55e]" />
                     <span>Siguiendo Viendo (Continuar Reproducción)</span>
                   </h1>
                   <p className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -461,8 +461,8 @@ export default function App() {
                         key={`${item.anime_id}-${item.episode_number}`}
                         className={`group relative flex flex-col rounded-xl overflow-hidden border transition-all cursor-pointer ${
                           isDark 
-                            ? 'bg-[#14151a] border-[#23252b] hover:border-[#f47521]/60 shadow-lg' 
-                            : 'bg-white border-gray-200 hover:border-[#f47521]/60 shadow-sm'
+                            ? 'bg-[#14151a] border-[#23252b] hover:border-[#22c55e]/60 shadow-lg' 
+                            : 'bg-white border-gray-200 hover:border-[#22c55e]/60 shadow-sm'
                         }`}
                         onClick={() => handleResumeContinueWatching(item)}
                       >
@@ -476,7 +476,7 @@ export default function App() {
 
                           {/* Hover Play Button Overlay */}
                           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
-                            <div className="w-11 h-11 rounded-full bg-[#f47521] flex items-center justify-center text-black shadow-lg transform group-hover:scale-110 transition-transform">
+                            <div className="w-11 h-11 rounded-full bg-[#22c55e] flex items-center justify-center text-black shadow-lg transform group-hover:scale-110 transition-transform">
                               <Play className="w-5 h-5 fill-black ml-0.5" />
                             </div>
                           </div>
@@ -496,13 +496,13 @@ export default function App() {
 
                           <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gray-800">
                             <div
-                              className="h-full bg-[#f47521]"
+                              className="h-full bg-[#22c55e]"
                               style={{ width: `${Math.min(100, Math.max(5, (item.progress_seconds / (item.duration_seconds || 1440)) * 100))}%` }}
                             />
                           </div>
                         </div>
                         <div className="p-3">
-                          <h4 className={`font-bold text-sm truncate group-hover:text-[#f47521] transition-colors ${
+                          <h4 className={`font-bold text-sm truncate group-hover:text-[#22c55e] transition-colors ${
                             isDark ? 'text-white' : 'text-gray-900'
                           }`}>
                             {item.anime_title}
@@ -580,7 +580,7 @@ export default function App() {
       }`}>
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-center gap-4">
           <div className="flex items-center gap-2">
-            <Flame className="w-4 h-4 text-[#f47521]" />
+            <Flame className="w-4 h-4 text-[#22c55e]" />
             <span className={`font-bold ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>GoAnime</span>
             <span>— Tu portal favorito para ver anime online</span>
           </div>

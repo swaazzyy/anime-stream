@@ -178,7 +178,7 @@ export default function UserProfileModal({
           isDark ? 'border-[#23252b] bg-[#101116]' : 'border-gray-200 bg-gray-50'
         }`}>
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#f47521]/15 text-[#f47521] flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl bg-[#22c55e]/15 text-[#22c55e] flex items-center justify-center">
               <User className="w-5 h-5" />
             </div>
             <div>
@@ -208,7 +208,7 @@ export default function UserProfileModal({
             onClick={() => { setActiveTab('profile'); clearMessages(); }}
             className={`py-3 px-4 text-xs font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
               activeTab === 'profile'
-                ? 'border-[#f47521] text-[#f47521]'
+                ? 'border-[#22c55e] text-[#22c55e]'
                 : isDark ? 'border-transparent text-gray-400 hover:text-gray-200' : 'border-transparent text-gray-500 hover:text-gray-900'
             }`}
           >
@@ -221,7 +221,7 @@ export default function UserProfileModal({
             onClick={() => { setActiveTab('password'); clearMessages(); }}
             className={`py-3 px-4 text-xs font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
               activeTab === 'password'
-                ? 'border-[#f47521] text-[#f47521]'
+                ? 'border-[#22c55e] text-[#22c55e]'
                 : isDark ? 'border-transparent text-gray-400 hover:text-gray-200' : 'border-transparent text-gray-500 hover:text-gray-900'
             }`}
           >
@@ -259,7 +259,7 @@ export default function UserProfileModal({
                 <div className="flex items-center gap-5 flex-wrap">
                   {/* Avatar Preview */}
                   <div className="relative group">
-                    <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-[#f47521] shadow-lg shadow-[#f47521]/20 bg-[#1e2029] flex items-center justify-center">
+                    <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-[#22c55e] shadow-lg shadow-[#22c55e]/20 bg-[#1e2029] flex items-center justify-center">
                       {avatar ? (
                         <img 
                           src={avatar} 
@@ -268,7 +268,7 @@ export default function UserProfileModal({
                           onError={() => setAvatar('')}
                         />
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-[#f47521] to-purple-600 flex items-center justify-center font-black text-2xl text-black">
+                        <div className="w-full h-full bg-gradient-to-br from-[#22c55e] to-purple-600 flex items-center justify-center font-black text-2xl text-black">
                           {username ? username.slice(0, 2).toUpperCase() : 'U'}
                         </div>
                       )}
@@ -298,7 +298,7 @@ export default function UserProfileModal({
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#f47521] hover:bg-[#ff8c3b] text-black font-extrabold text-xs transition-colors shadow-sm cursor-pointer"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#22c55e] hover:bg-[#4ade80] text-black font-extrabold text-xs transition-colors shadow-sm cursor-pointer"
                       >
                         <Upload className="w-3.5 h-3.5" />
                         <span>Subir desde tu PC</span>
@@ -344,14 +344,14 @@ export default function UserProfileModal({
                       placeholder="https://ejemplo.com/mi-avatar.jpg"
                       value={avatarInputUrl}
                       onChange={(e) => setAvatarInputUrl(e.target.value)}
-                      className={`flex-1 rounded-xl border px-3 py-2 text-xs focus:outline-none focus:border-[#f47521] ${
+                      className={`flex-1 rounded-xl border px-3 py-2 text-xs focus:outline-none focus:border-[#22c55e] ${
                         isDark ? 'bg-[#0f1014] border-[#23252b] text-white' : 'bg-gray-50 border-gray-200 text-gray-900'
                       }`}
                     />
                     <button
                       type="button"
                       onClick={handleApplyUrl}
-                      className="px-4 py-2 rounded-xl bg-[#f47521] text-black font-extrabold text-xs hover:bg-[#ff8c3b] transition-colors"
+                      className="px-4 py-2 rounded-xl bg-[#22c55e] text-black font-extrabold text-xs hover:bg-[#4ade80] transition-colors"
                     >
                       Aplicar
                     </button>
@@ -361,7 +361,7 @@ export default function UserProfileModal({
                 {/* Preset Avatars Gallery */}
                 <div className="mt-4">
                   <p className="text-xs font-semibold text-gray-400 mb-2 flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-[#f47521]" />
+                    <Sparkles className="w-3.5 h-3.5 text-[#22c55e]" />
                     <span>O elige un avatar de anime:</span>
                   </p>
                   
@@ -375,7 +375,7 @@ export default function UserProfileModal({
                           onClick={() => { setAvatar(item.url); clearMessages(); }}
                           className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all p-0.5 cursor-pointer group ${
                             isSelected 
-                              ? 'border-[#f47521] ring-2 ring-[#f47521]/50 scale-105' 
+                              ? 'border-[#22c55e] ring-2 ring-[#22c55e]/50 scale-105' 
                               : isDark ? 'border-[#23252b] hover:border-gray-500' : 'border-gray-200 hover:border-gray-400'
                           }`}
                           title={item.name}
@@ -386,7 +386,7 @@ export default function UserProfileModal({
                             className="w-full h-full object-cover rounded-lg group-hover:scale-110 transition-transform"
                           />
                           {isSelected && (
-                            <div className="absolute inset-0 bg-[#f47521]/40 flex items-center justify-center">
+                            <div className="absolute inset-0 bg-[#22c55e]/40 flex items-center justify-center">
                               <Check className="w-4 h-4 text-black font-black" />
                             </div>
                           )}
@@ -408,7 +408,7 @@ export default function UserProfileModal({
                     required
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className={`w-full rounded-xl border px-3.5 py-2.5 text-sm font-semibold focus:outline-none focus:border-[#f47521] transition-colors ${
+                    className={`w-full rounded-xl border px-3.5 py-2.5 text-sm font-semibold focus:outline-none focus:border-[#22c55e] transition-colors ${
                       isDark ? 'bg-[#0f1014] border-[#23252b] text-white' : 'bg-gray-50 border-gray-200 text-gray-900'
                     }`}
                     placeholder="Tu nombre de usuario"
@@ -440,7 +440,7 @@ export default function UserProfileModal({
                 <button
                   type="submit"
                   disabled={savingProfile}
-                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#f47521] hover:bg-[#ff8c3b] text-black font-extrabold text-sm transition-all shadow-lg shadow-[#f47521]/20 active:scale-95 disabled:opacity-50 cursor-pointer"
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#22c55e] hover:bg-[#4ade80] text-black font-extrabold text-sm transition-all shadow-lg shadow-[#22c55e]/20 active:scale-95 disabled:opacity-50 cursor-pointer"
                 >
                   {savingProfile ? (
                     <>
@@ -470,7 +470,7 @@ export default function UserProfileModal({
                     required
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    className={`w-full rounded-xl border px-3.5 py-2.5 text-sm font-semibold focus:outline-none focus:border-[#f47521] pr-10 ${
+                    className={`w-full rounded-xl border px-3.5 py-2.5 text-sm font-semibold focus:outline-none focus:border-[#22c55e] pr-10 ${
                       isDark ? 'bg-[#0f1014] border-[#23252b] text-white' : 'bg-gray-50 border-gray-200 text-gray-900'
                     }`}
                     placeholder="••••••••"
@@ -496,7 +496,7 @@ export default function UserProfileModal({
                     required
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className={`w-full rounded-xl border px-3.5 py-2.5 text-sm font-semibold focus:outline-none focus:border-[#f47521] pr-10 ${
+                    className={`w-full rounded-xl border px-3.5 py-2.5 text-sm font-semibold focus:outline-none focus:border-[#22c55e] pr-10 ${
                       isDark ? 'bg-[#0f1014] border-[#23252b] text-white' : 'bg-gray-50 border-gray-200 text-gray-900'
                     }`}
                     placeholder="Al menos 4 caracteres"
@@ -521,7 +521,7 @@ export default function UserProfileModal({
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className={`w-full rounded-xl border px-3.5 py-2.5 text-sm font-semibold focus:outline-none focus:border-[#f47521] ${
+                  className={`w-full rounded-xl border px-3.5 py-2.5 text-sm font-semibold focus:outline-none focus:border-[#22c55e] ${
                     isDark ? 'bg-[#0f1014] border-[#23252b] text-white' : 'bg-gray-50 border-gray-200 text-gray-900'
                   }`}
                   placeholder="Repite la nueva contraseña"
@@ -533,7 +533,7 @@ export default function UserProfileModal({
                 <button
                   type="submit"
                   disabled={savingPassword}
-                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#f47521] hover:bg-[#ff8c3b] text-black font-extrabold text-sm transition-all shadow-lg shadow-[#f47521]/20 active:scale-95 disabled:opacity-50 cursor-pointer"
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#22c55e] hover:bg-[#4ade80] text-black font-extrabold text-sm transition-all shadow-lg shadow-[#22c55e]/20 active:scale-95 disabled:opacity-50 cursor-pointer"
                 >
                   {savingPassword ? (
                     <>
@@ -556,11 +556,11 @@ export default function UserProfileModal({
             isDark ? 'bg-[#0d0e12] border-[#23252b]' : 'bg-gray-50 border-gray-200'
           }`}>
             <div className="text-center">
-              <span className="text-lg font-black text-[#f47521]">
+              <span className="text-lg font-black text-[#22c55e]">
                 {stats.watchlistCount ?? 0}
               </span>
               <p className={`text-[11px] font-semibold flex items-center gap-1 justify-center ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                <Bookmark className="w-3 h-3 text-[#f47521]" />
+                <Bookmark className="w-3 h-3 text-[#22c55e]" />
                 <span>En Mi Lista</span>
               </p>
             </div>

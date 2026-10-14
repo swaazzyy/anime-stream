@@ -66,7 +66,7 @@ export default function MyListView({ onSelectAnime, onWatchEpisode, onWatchlistU
       case 'plan_to_watch':
         return <span className="px-2 py-0.5 rounded bg-blue-900/60 text-blue-300 text-[10px] font-bold">Por Ver (Futuro)</span>;
       case 'watching':
-        return <span className="px-2 py-0.5 rounded bg-[#f47521]/20 text-[#f47521] text-[10px] font-bold">Viendo</span>;
+        return <span className="px-2 py-0.5 rounded bg-[#22c55e]/20 text-[#22c55e] text-[10px] font-bold">Viendo</span>;
       case 'completed':
         return <span className="px-2 py-0.5 rounded bg-green-900/60 text-green-300 text-[10px] font-bold">Completado</span>;
       case 'favorite':
@@ -85,7 +85,7 @@ export default function MyListView({ onSelectAnime, onWatchEpisode, onWatchlistU
         <h1 className={`text-2xl sm:text-3xl font-black flex items-center gap-3 ${
           isDark ? 'text-white' : 'text-gray-900'
         }`}>
-          <Bookmark className="w-7 h-7 text-[#f47521]" />
+          <Bookmark className="w-7 h-7 text-[#22c55e]" />
           <span>Mi Lista / Para el Futuro</span>
         </h1>
         <p className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -106,7 +106,7 @@ export default function MyListView({ onSelectAnime, onWatchEpisode, onWatchlistU
               onClick={() => setActiveFilter(tab.id)}
               className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors whitespace-nowrap ${
                 activeFilter === tab.id
-                  ? 'bg-[#f47521] text-black shadow-md'
+                  ? 'bg-[#22c55e] text-black shadow-md'
                   : isDark
                     ? 'bg-[#14151a] hover:bg-[#1e2029] text-gray-300 border border-[#23252b]'
                     : 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 shadow-xs'
@@ -121,7 +121,7 @@ export default function MyListView({ onSelectAnime, onWatchEpisode, onWatchlistU
       {/* Grid of list items */}
       {loading ? (
         <div className="py-20 text-center">
-          <div className="w-10 h-10 border-4 border-[#f47521] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <div className="w-10 h-10 border-4 border-[#22c55e] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
           <p className="text-gray-400 text-sm">Cargando tu lista de GoAnime...</p>
         </div>
       ) : filteredItems.length === 0 ? (
@@ -143,8 +143,8 @@ export default function MyListView({ onSelectAnime, onWatchEpisode, onWatchlistU
               key={item.anime_id}
               className={`group relative flex flex-col rounded-xl overflow-hidden border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${
                 isDark 
-                  ? 'bg-[#14151a] border-[#23252b] hover:border-[#f47521]/60 hover:shadow-black/50' 
-                  : 'bg-white border-gray-200 hover:border-[#f47521]/60 shadow-sm hover:shadow-gray-300'
+                  ? 'bg-[#14151a] border-[#23252b] hover:border-[#22c55e]/60 hover:shadow-black/50' 
+                  : 'bg-white border-gray-200 hover:border-[#22c55e]/60 shadow-sm hover:shadow-gray-300'
               }`}
             >
               {/* Poster */}
@@ -185,7 +185,7 @@ export default function MyListView({ onSelectAnime, onWatchEpisode, onWatchlistU
                       e.stopPropagation();
                       onWatchEpisode({ id: item.anime_id, title: item.anime_title, poster: item.anime_poster }, 1);
                     }}
-                    className="w-12 h-12 rounded-full bg-[#f47521] flex items-center justify-center text-black shadow-lg transform group-hover:scale-110 transition-transform"
+                    className="w-12 h-12 rounded-full bg-[#22c55e] flex items-center justify-center text-black shadow-lg transform group-hover:scale-110 transition-transform"
                   >
                     <Play className="w-6 h-6 fill-black ml-0.5" />
                   </div>
@@ -196,7 +196,7 @@ export default function MyListView({ onSelectAnime, onWatchEpisode, onWatchlistU
               <div className="p-3">
                 <h4
                   onClick={() => onSelectAnime({ id: item.anime_id, title: item.anime_title, poster: item.anime_poster })}
-                  className={`font-bold text-xs sm:text-sm line-clamp-1 cursor-pointer hover:text-[#f47521] transition-colors ${
+                  className={`font-bold text-xs sm:text-sm line-clamp-1 cursor-pointer hover:text-[#22c55e] transition-colors ${
                     isDark ? 'text-white' : 'text-gray-900'
                   }`}
                 >

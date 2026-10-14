@@ -127,7 +127,7 @@ export default function WatchPage({
           <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold truncate max-w-xs sm:max-w-md">
             <span 
               onClick={() => onNavigate(`/media/${slug}`)} 
-              className="text-[#f47521] hover:underline cursor-pointer truncate"
+              className="text-[#22c55e] hover:underline cursor-pointer truncate"
             >
               {anime?.title || slug}
             </span>
@@ -199,7 +199,7 @@ export default function WatchPage({
 
           {loading ? (
             <div className="w-full h-full flex flex-col items-center justify-center gap-3 bg-black">
-              <div className="w-10 h-10 border-4 border-[#f47521] border-t-transparent rounded-full animate-spin" />
+              <div className="w-10 h-10 border-4 border-[#22c55e] border-t-transparent rounded-full animate-spin" />
               <p className="text-xs font-bold text-gray-300">Conectando servidor de GoAnime...</p>
             </div>
           ) : error ? (
@@ -207,7 +207,7 @@ export default function WatchPage({
               <p className="text-sm font-bold text-red-400">{error}</p>
               <button
                 onClick={() => onNavigate(`/media/${slug}`)}
-                className="px-4 py-2 rounded-lg bg-[#f47521] text-black text-xs font-bold"
+                className="px-4 py-2 rounded-lg bg-[#22c55e] text-black text-xs font-bold"
               >
                 Volver a {anime?.title}
               </button>
@@ -227,10 +227,10 @@ export default function WatchPage({
         {/* Info Section Below Player */}
         <div className="mt-6 px-4 sm:px-0 flex flex-col lg:flex-row lg:items-start justify-between gap-8 pb-8 border-b border-white/10">
           <div className="flex-1 min-w-0">
-            {/* Orange Uppercase Series Name */}
+            {/* Green Uppercase Series Name */}
             <p 
               onClick={() => onNavigate(`/media/${slug}`)} 
-              className="text-[#f47521] hover:underline cursor-pointer text-xs font-black uppercase tracking-widest mb-1.5 inline-block"
+              className="text-[#22c55e] hover:underline cursor-pointer text-xs font-black uppercase tracking-widest mb-1.5 inline-block"
             >
               {anime?.title || slug}
             </p>
@@ -255,7 +255,7 @@ export default function WatchPage({
                   onClick={() => onToggleWatchlist?.(anime)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all border ${
                     isInWatchlist
-                      ? 'bg-[#f47521] text-black border-[#f47521]'
+                      ? 'bg-[#22c55e] text-black border-[#22c55e]'
                       : 'bg-white/10 hover:bg-white/20 text-white border-white/10'
                   }`}
                 >
@@ -267,7 +267,7 @@ export default function WatchPage({
               {anime && (
                 <button
                   onClick={() => onDownloadCap?.(anime, episodeNum, episodeData?.downloads)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-[#f47521] hover:text-black text-white text-xs font-bold transition-all border border-white/10"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-[#22c55e] hover:text-black text-white text-xs font-bold transition-all border border-white/10"
                 >
                   <Download className="w-4 h-4" />
                   <span>Descargar Cap</span>
@@ -289,7 +289,7 @@ export default function WatchPage({
 
               <div
                 onClick={() => onNavigate(`/media/${slug}/${episodeNum + 1}`)}
-                className="group flex gap-3 p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all cursor-pointer hover:border-[#f47521]/60"
+                className="group flex gap-3 p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all cursor-pointer hover:border-[#22c55e]/60"
               >
                 <div className="relative w-36 aspect-video rounded-lg overflow-hidden bg-black flex-shrink-0">
                   <img
@@ -303,7 +303,7 @@ export default function WatchPage({
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="w-8 h-8 rounded-full bg-[#f47521] flex items-center justify-center text-black shadow-md">
+                    <div className="w-8 h-8 rounded-full bg-[#22c55e] flex items-center justify-center text-black shadow-md">
                       <Play className="w-4 h-4 fill-black ml-0.5" />
                     </div>
                   </div>
@@ -313,7 +313,7 @@ export default function WatchPage({
                 </div>
 
                 <div className="flex flex-col justify-center min-w-0">
-                  <p className="text-xs font-bold text-white group-hover:text-[#f47521] transition-colors truncate">
+                  <p className="text-xs font-bold text-white group-hover:text-[#22c55e] transition-colors truncate">
                     E{episodeNum + 1} – Capítulo {episodeNum + 1}
                   </p>
                   <p className="text-[11px] text-gray-400 mt-1">
@@ -329,12 +329,12 @@ export default function WatchPage({
         <div className="mt-8 px-4 sm:px-0">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-black text-white flex items-center gap-2">
-              <Layers className="w-5 h-5 text-[#f47521]" />
+              <Layers className="w-5 h-5 text-[#22c55e]" />
               <span>Todos los Episodios ({episodesList.length})</span>
             </h3>
             <button
               onClick={() => onNavigate(`/media/${slug}`)}
-              className="text-xs font-bold text-[#f47521] hover:underline"
+              className="text-xs font-bold text-[#22c55e] hover:underline"
             >
               Ver ficha del anime &rarr;
             </button>
@@ -353,8 +353,8 @@ export default function WatchPage({
                   }}
                   className={`group relative rounded-xl overflow-hidden border transition-all cursor-pointer ${
                     isCurrent
-                      ? 'border-[#f47521] ring-2 ring-[#f47521]/40 bg-[#1e2029]'
-                      : 'border-white/10 hover:border-[#f47521]/60 bg-white/5 hover:bg-white/10'
+                      ? 'border-[#22c55e] ring-2 ring-[#22c55e]/40 bg-[#1e2029]'
+                      : 'border-white/10 hover:border-[#22c55e]/60 bg-white/5 hover:bg-white/10'
                   }`}
                 >
                   <div className="relative aspect-video w-full overflow-hidden bg-black">
@@ -372,12 +372,12 @@ export default function WatchPage({
                     <div className="absolute inset-0 bg-black/40" />
 
                     {isCurrent ? (
-                      <span className="absolute inset-0 flex items-center justify-center font-black text-xs text-[#f47521] bg-black/60">
+                      <span className="absolute inset-0 flex items-center justify-center font-black text-xs text-[#22c55e] bg-black/60">
                         Reproduciendo
                       </span>
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="w-8 h-8 rounded-full bg-[#f47521] flex items-center justify-center text-black">
+                        <div className="w-8 h-8 rounded-full bg-[#22c55e] flex items-center justify-center text-black">
                           <Play className="w-4 h-4 fill-black ml-0.5" />
                         </div>
                       </div>
@@ -389,7 +389,7 @@ export default function WatchPage({
                   </div>
 
                   <div className="p-2">
-                    <p className={`text-xs font-bold truncate ${isCurrent ? 'text-[#f47521]' : 'text-white group-hover:text-[#f47521]'}`}>
+                    <p className={`text-xs font-bold truncate ${isCurrent ? 'text-[#22c55e]' : 'text-white group-hover:text-[#22c55e]'}`}>
                       {isMovie ? 'Película Completa' : (ep.number === 0 ? 'Episodio 0' : `Episodio ${ep.number}`)}
                     </p>
                   </div>

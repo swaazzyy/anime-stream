@@ -52,7 +52,7 @@ export default function AuthModal({ onClose, onAuthSuccess, theme = 'dark' }) {
 
         {/* Brand header */}
         <div className="text-center mb-6">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-[#f47521] to-[#ff9e58] flex items-center justify-center mx-auto mb-3 shadow-lg shadow-[#f47521]/20">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-[#22c55e] to-[#86efac] flex items-center justify-center mx-auto mb-3 shadow-lg shadow-[#22c55e]/20">
             <Flame className="w-6 h-6 text-black fill-black" />
           </div>
           <h2 className="text-2xl font-black">
@@ -73,7 +73,7 @@ export default function AuthModal({ onClose, onAuthSuccess, theme = 'dark' }) {
             type="button"
             onClick={() => { setIsLogin(true); setError(''); }}
             className={`w-1/2 py-2 rounded-lg text-xs font-bold transition-all ${
-              isLogin ? 'bg-[#f47521] text-black shadow-md' : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+              isLogin ? 'bg-[#22c55e] text-black shadow-md' : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
             }`}
           >
             Iniciar Sesión
@@ -82,7 +82,7 @@ export default function AuthModal({ onClose, onAuthSuccess, theme = 'dark' }) {
             type="button"
             onClick={() => { setIsLogin(false); setError(''); }}
             className={`w-1/2 py-2 rounded-lg text-xs font-bold transition-all ${
-              !isLogin ? 'bg-[#f47521] text-black shadow-md' : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+              !isLogin ? 'bg-[#22c55e] text-black shadow-md' : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
             }`}
           >
             Registrarse
@@ -109,7 +109,7 @@ export default function AuthModal({ onClose, onAuthSuccess, theme = 'dark' }) {
                 placeholder="Tu nombre de usuario"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className={`w-full pl-9 pr-3 py-2.5 rounded-lg text-sm border focus:outline-none focus:border-[#f47521] ${
+                className={`w-full pl-9 pr-3 py-2.5 rounded-lg text-sm border focus:outline-none focus:border-[#22c55e] ${
                   isDark ? 'bg-[#1e2029] border-[#2b2e3b] text-white' : 'bg-gray-50 border-gray-300 text-gray-900'
                 }`}
               />
@@ -126,7 +126,7 @@ export default function AuthModal({ onClose, onAuthSuccess, theme = 'dark' }) {
                   placeholder="tu@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={`w-full pl-9 pr-3 py-2.5 rounded-lg text-sm border focus:outline-none focus:border-[#f47521] ${
+                  className={`w-full pl-9 pr-3 py-2.5 rounded-lg text-sm border focus:outline-none focus:border-[#22c55e] ${
                     isDark ? 'bg-[#1e2029] border-[#2b2e3b] text-white' : 'bg-gray-50 border-gray-300 text-gray-900'
                   }`}
                 />
@@ -144,7 +144,7 @@ export default function AuthModal({ onClose, onAuthSuccess, theme = 'dark' }) {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={`w-full pl-9 pr-3 py-2.5 rounded-lg text-sm border focus:outline-none focus:border-[#f47521] ${
+                className={`w-full pl-9 pr-3 py-2.5 rounded-lg text-sm border focus:outline-none focus:border-[#22c55e] ${
                   isDark ? 'bg-[#1e2029] border-[#2b2e3b] text-white' : 'bg-gray-50 border-gray-300 text-gray-900'
                 }`}
               />
@@ -154,7 +154,7 @@ export default function AuthModal({ onClose, onAuthSuccess, theme = 'dark' }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-2 py-3 rounded-xl bg-[#f47521] hover:bg-[#ff8c3b] text-black font-extrabold text-sm transition-all shadow-lg shadow-[#f47521]/20 active:scale-95 disabled:opacity-50"
+            className="w-full mt-2 py-3 rounded-xl bg-[#22c55e] hover:bg-[#4ade80] text-black font-extrabold text-sm transition-all shadow-lg shadow-[#22c55e]/20 active:scale-95 disabled:opacity-50"
           >
             {loading ? 'Procesando...' : isLogin ? 'Entrar a GoAnime' : 'Crear Cuenta'}
           </button>

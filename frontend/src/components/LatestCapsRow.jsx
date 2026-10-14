@@ -56,7 +56,7 @@ export default function LatestCapsRow({ caps = [], onWatchEpisode, onDownloadCap
               <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/45 to-transparent pointer-events-none" />
 
               {/* Top-Right: Circular Play Watermark Icon (Exact match to screenshot) */}
-              <div className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full border border-white/40 bg-black/35 backdrop-blur-xs flex items-center justify-center text-white/90 group-hover:scale-110 group-hover:bg-[#f47521] group-hover:border-[#f47521] group-hover:text-black transition-all shadow-md">
+              <div className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full border border-white/40 bg-black/35 backdrop-blur-xs flex items-center justify-center text-white/90 group-hover:scale-110 group-hover:bg-[#22c55e] group-hover:border-[#22c55e] group-hover:text-black transition-all shadow-md">
                 <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
               </div>
 
@@ -68,15 +68,15 @@ export default function LatestCapsRow({ caps = [], onWatchEpisode, onDownloadCap
                   e.stopPropagation();
                   onDownloadCap(anime, cap.episode_number);
                 }}
-                className="absolute top-2.5 left-2.5 p-2 rounded-lg bg-black/60 hover:bg-[#f47521] hover:text-black text-white/90 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-md border border-white/20 active:scale-95"
+                className="absolute top-2.5 left-2.5 p-2 rounded-lg bg-black/60 hover:bg-[#22c55e] hover:text-black text-white/90 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-md border border-white/20 active:scale-95"
               >
                 <Download className="w-3.5 h-3.5" />
               </button>
 
-              {/* Bottom Content: Orange Pill + Title (Exact match to screenshot) */}
+              {/* Bottom Content: Green Pill + Title (Exact match to screenshot) */}
               <div className="absolute bottom-2.5 left-3 right-3 pointer-events-none">
-                {/* Orange Badge: "Episodio X" */}
-                <div className="inline-block px-2.5 py-0.5 rounded bg-[#f47521] text-white font-black text-[11px] tracking-wide shadow-md">
+                {/* Green Badge: "Episodio X" */}
+                <div className="inline-block px-2.5 py-0.5 rounded bg-[#22c55e] text-white font-black text-[11px] tracking-wide shadow-md">
                   Episodio {cap.episode_number}
                 </div>
 
