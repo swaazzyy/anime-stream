@@ -747,8 +747,7 @@ func FetchAnimeAV1HomeLatest() ([]AnimeAV1LatestCard, error) {
 		block = block[:endIdx]
 	}
 
-	itemRegex := regexp.MustCompile(`commentsCount:(\d+)[^}]*?media:\{id:(\d+),slug:"([^"]+)",title:"([^"]+)"\},number:(\d+)`)
-	matches := itemRegex.FindAllStringSubmatch(block, -1)
+	matches := av1LatestRe.FindAllStringSubmatch(block, -1)
 	if len(matches) == 0 {
 		return nil, fmt.Errorf("no latest episodes parsed")
 	}
@@ -816,7 +815,7 @@ func av1Type(catID string) string {
 
 // parseAV1Status parses the numerical or text status from AnimeAV1 HTML
 func parseAV1Status(html string) string {
-	if m := regexp.MustCompile(`status:(\d+)`).FindStringSubmatch(html); len(m) >= 2 {
+	if m := av1StatusRe.FindStringSubmatch(html); len(m) >= 2 {
 		switch m[1] {
 		case "0":
 			return "Finalizado"
@@ -863,8 +862,7 @@ func FetchAnimeAV1Filtered(q url.Values) ([]Anime, error) {
 		return nil, err
 	}
 
-	regex := regexp.MustCompile(`\{id:"?(\d+)"?,title:"([^"]+)",synopsis:"((?:[^"\\]|\\.)*)",categoryId:(\d+),slug:"([^"]+)"`)
-	matches := regex.FindAllStringSubmatch(html, -1)
+	matches := av1CatalogItemRe.FindAllStringSubmatch(html, -1)
 	if len(matches) == 0 {
 		return nil, fmt.Errorf("no media matches found on animeav1")
 	}
@@ -962,9 +960,9 @@ func FetchAnimeAV1Details(slugOrID string) (*Anime, error) {
 	}
 
 	// 2. Extract media ID: media:{id:(\d+)
-	idMatch := regexp.MustCompile(`media:\{id:(\d+)`).FindStringSubmatch(html)
+	idMatch := av1MediaIDRe.FindStringSubmatch(html)
 	if len(idMatch) < 2 {
-		idMatch = regexp.MustCompile(`media:\{[^}]*?id:(\d+)`).FindStringSubmatch(html)
+		idMatch = av1MediaIDLooseRe.FindStringSubmatch(html)
 		if len(idMatch) < 2 {
 			return nil, fmt.Errorf("media metadata not found")
 		}
@@ -973,7 +971,7 @@ func FetchAnimeAV1Details(slugOrID string) (*Anime, error) {
 
 	// 3. Title
 	title := slugOrID
-	titleMatch := regexp.MustCompile(`media:\{[^}]*?title:"([^"]+)"`).FindStringSubmatch(html)
+	titleMatch := av1TitleRe.FindStringSubmatch(html)
 	if len(titleMatch) >= 2 {
 		title = titleMatch[1]
 	}
@@ -981,18 +979,18 @@ func FetchAnimeAV1Details(slugOrID string) (*Anime, error) {
 	// 4. Slug
 	slug := slugOrID
 	if _, err := strconv.Atoi(slugOrID); err == nil {
-		if sm := regexp.MustCompile(`votes:\d+,slug:"([a-z0-9-]+)"`).FindStringSubmatch(html); len(sm) >= 2 {
+		if sm := av1SlugRe.FindStringSubmatch(html); len(sm) >= 2 {
 			slug = sm[1]
 		}
 	}
 
 	// 5. Category / Format / Movie detection
 	animeType := "TV Anime"
-	if m := regexp.MustCompile(`categoryId:(\d+)`).FindStringSubmatch(html); len(m) >= 2 {
+	if m := av1CategoryIDRe.FindStringSubmatch(html); len(m) >= 2 {
 		animeType = av1Type(m[1])
 	}
 	isMovie := animeType == "Película"
-	catNameMatch := regexp.MustCompile(`category:\{[^}]*?name:"([^"]+)"`).FindStringSubmatch(html)
+	catNameMatch := av1CategoryNameRe.FindStringSubmatch(html)
 	if len(catNameMatch) >= 2 {
 		if strings.EqualFold(catNameMatch[1], "Película") || strings.EqualFold(catNameMatch[1], "Movie") {
 			isMovie = true
@@ -1010,7 +1008,7 @@ func FetchAnimeAV1Details(slugOrID string) (*Anime, error) {
 
 	// 6. Synopsis
 	synopsis := ""
-	synopsisMatch := regexp.MustCompile(`synopsis:"((?:[^"\\]|\\.)*)"`).FindStringSubmatch(html)
+	synopsisMatch := av1SynopsisRe.FindStringSubmatch(html)
 	if len(synopsisMatch) >= 2 {
 		synopsis = strings.ReplaceAll(synopsisMatch[1], `\n`, "\n")
 		synopsis = strings.ReplaceAll(synopsis, `\"`, `"`)
@@ -1018,28 +1016,27 @@ func FetchAnimeAV1Details(slugOrID string) (*Anime, error) {
 
 	// 7. Score
 	score := 8.5
-	scoreMatch := regexp.MustCompile(`score:([0-9.]+)`).FindStringSubmatch(html)
+	scoreMatch := av1ScoreRe.FindStringSubmatch(html)
 	if len(scoreMatch) >= 2 {
 		score, _ = strconv.ParseFloat(scoreMatch[1], 64)
 	}
 
 	// 7b. Year from the media's own startDate:"YYYY-MM-DD" (related media repeat the key further down)
 	year := 0
-	if m := regexp.MustCompile(`startDate:"(\d{4})-`).FindStringSubmatch(html[strings.Index(html, "media:{"):]); len(m) >= 2 {
+	if m := av1StartDateRe.FindStringSubmatch(html[strings.Index(html, "media:{"):]); len(m) >= 2 {
 		year, _ = strconv.Atoi(m[1])
 	}
 
 	// 8. Trailer
 	trailer := ""
-	trailerMatch := regexp.MustCompile(`trailer:"([^"]+)"`).FindStringSubmatch(html)
+	trailerMatch := av1TrailerRe.FindStringSubmatch(html)
 	if len(trailerMatch) >= 2 && trailerMatch[1] != "null" {
 		trailer = "https://www.youtube.com/embed/" + trailerMatch[1]
 	}
 
 	// 9. Genres
-	genresRegex := regexp.MustCompile(`\{id:\d+,name:"([^"]+)",type:\d+,slug:"[^"]+",malId:\d+\}`)
 	var genres []string
-	for _, gm := range genresRegex.FindAllStringSubmatch(html, -1) {
+	for _, gm := range av1GenreRe.FindAllStringSubmatch(html, -1) {
 		gName := gm[1]
 		if strings.EqualFold(gName, "Hentai") || strings.EqualFold(gName, "Ecchi +18") {
 			return nil, fmt.Errorf("contenido no disponible")
@@ -1071,9 +1068,8 @@ func FetchAnimeAV1Details(slugOrID string) (*Anime, error) {
 			if endIdx := strings.Index(block, "],"); endIdx != -1 {
 				block = block[:endIdx]
 			}
-			epItemRegex := regexp.MustCompile(`\{id:\d+,number:(\d+)\}`)
 			seenEps := make(map[int]bool)
-			for _, em := range epItemRegex.FindAllStringSubmatch(block, -1) {
+			for _, em := range av1EpisodeItemRe.FindAllStringSubmatch(block, -1) {
 				n, _ := strconv.Atoi(em[1])
 				if !seenEps[n] {
 					seenEps[n] = true
@@ -1094,7 +1090,7 @@ func FetchAnimeAV1Details(slugOrID string) (*Anime, error) {
 		}
 		if len(episodes) == 0 {
 			epCount := 12
-			if epCountMatch := regexp.MustCompile(`episodesCount:(\d+)`).FindStringSubmatch(html); len(epCountMatch) >= 2 {
+			if epCountMatch := av1EpisodesCountRe.FindStringSubmatch(html); len(epCountMatch) >= 2 {
 				epCount, _ = strconv.Atoi(epCountMatch[1])
 			}
 			dummyAnime := &Anime{ID: slug, Title: title, Banner: fmt.Sprintf("%s/backdrops/%s.jpg", AnimeAV1CDNBase, mediaID)}
@@ -1154,7 +1150,7 @@ func ScrapeAnimeAV1Episode(slug string, epNum int) ([]Server, []DownloadOption, 
 	var dlOptions []DownloadOption
 	idx := 0
 	// embeds:{SUB:[...],DUB:[...]}
-	forEachAV1Link(html, `embeds:\{([\s\S]*?)\}(?:,downloads|$)`, func(lang, langTag, audio, name, link string) {
+	forEachAV1Link(html, av1EmbedsRe, func(lang, langTag, audio, name, link string) {
 		idx++
 		servers = append(servers, Server{
 			ID:         fmt.Sprintf("av1_live_%s_%s_%d", strings.ToLower(lang), strings.ToLower(name), idx),
@@ -1166,7 +1162,7 @@ func ScrapeAnimeAV1Episode(slug string, epNum int) ([]Server, []DownloadOption, 
 		})
 	})
 	// downloads:{SUB:[...],DUB:[...]}
-	forEachAV1Link(html, `downloads:\{([\s\S]*?)\}\}`, func(lang, langTag, audio, name, link string) {
+	forEachAV1Link(html, av1DownloadsRe, func(lang, langTag, audio, name, link string) {
 		dlOptions = append(dlOptions, DownloadOption{
 			Name:    fmt.Sprintf("AnimeAV1 Directo (%s) [%s]", name, langTag),
 			Type:    "direct",
@@ -1190,14 +1186,33 @@ func ScrapeAnimeAV1Episode(slug string, epNum int) ([]Server, []DownloadOption, 
 	return servers, dlOptions, nil
 }
 
+// Patterns for the SvelteKit data embedded in animeav1.com pages, compiled once.
 var (
-	av1LangRegex = regexp.MustCompile(`([A-Z]+):\[([\s\S]*?)\]`)
-	av1LinkRegex = regexp.MustCompile(`\{server:"([^"]+)",url:"([^"]+)"\}`)
+	av1LatestRe        = regexp.MustCompile(`commentsCount:(\d+)[^}]*?media:\{id:(\d+),slug:"([^"]+)",title:"([^"]+)"\},number:(\d+)`)
+	av1StatusRe        = regexp.MustCompile(`status:(\d+)`)
+	av1CatalogItemRe   = regexp.MustCompile(`\{id:"?(\d+)"?,title:"([^"]+)",synopsis:"((?:[^"\\]|\\.)*)",categoryId:(\d+),slug:"([^"]+)"`)
+	av1MediaIDRe       = regexp.MustCompile(`media:\{id:(\d+)`)
+	av1MediaIDLooseRe  = regexp.MustCompile(`media:\{[^}]*?id:(\d+)`)
+	av1TitleRe         = regexp.MustCompile(`media:\{[^}]*?title:"([^"]+)"`)
+	av1SlugRe          = regexp.MustCompile(`votes:\d+,slug:"([a-z0-9-]+)"`)
+	av1CategoryIDRe    = regexp.MustCompile(`categoryId:(\d+)`)
+	av1CategoryNameRe  = regexp.MustCompile(`category:\{[^}]*?name:"([^"]+)"`)
+	av1SynopsisRe      = regexp.MustCompile(`synopsis:"((?:[^"\\]|\\.)*)"`)
+	av1ScoreRe         = regexp.MustCompile(`score:([0-9.]+)`)
+	av1StartDateRe     = regexp.MustCompile(`startDate:"(\d{4})-`)
+	av1TrailerRe       = regexp.MustCompile(`trailer:"([^"]+)"`)
+	av1GenreRe         = regexp.MustCompile(`\{id:\d+,name:"([^"]+)",type:\d+,slug:"[^"]+",malId:\d+\}`)
+	av1EpisodeItemRe   = regexp.MustCompile(`\{id:\d+,number:(\d+)\}`)
+	av1EpisodesCountRe = regexp.MustCompile(`episodesCount:(\d+)`)
+	av1EmbedsRe        = regexp.MustCompile(`embeds:\{([\s\S]*?)\}(?:,downloads|$)`)
+	av1DownloadsRe     = regexp.MustCompile(`downloads:\{([\s\S]*?)\}\}`)
+	av1LangRegex       = regexp.MustCompile(`([A-Z]+):\[([\s\S]*?)\]`)
+	av1LinkRegex       = regexp.MustCompile(`\{server:"([^"]+)",url:"([^"]+)"\}`)
 )
 
-// forEachAV1Link calls fn for every unique {server,url} pair inside the block matched by blockPattern.
-func forEachAV1Link(html, blockPattern string, fn func(lang, langTag, audio, name, link string)) {
-	m := regexp.MustCompile(blockPattern).FindStringSubmatch(html)
+// forEachAV1Link calls fn for every unique {server,url} pair inside the block matched by block.
+func forEachAV1Link(html string, block *regexp.Regexp, fn func(lang, langTag, audio, name, link string)) {
+	m := block.FindStringSubmatch(html)
 	if len(m) < 2 {
 		return
 	}

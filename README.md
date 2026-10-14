@@ -53,6 +53,7 @@ f:\anime-stream\
 ├── anime-stream-linux-arm64       # Binario standalone para Linux ARM64 (aarch64)
 ├── anime-stream-windows-amd64.exe # Binario standalone para Windows 64-bit
 ├── run.bat                        # Lanzador para Windows (inicia el servidor y abre el navegador)
+├── build.bat                      # Recompila el frontend y los tres binarios (requiere Node.js y Go)
 ├── Dockerfile                     # Imagen contenedor ligera en Alpine Linux
 ├── docker-compose.yml             # Despliegue con Docker Compose
 ├── backend/
@@ -121,6 +122,8 @@ O ejecútalo desde PowerShell / CMD:
 .\anime-stream-windows-amd64.exe
 ```
 Abre `http://localhost:8080` en tu navegador.
+
+Tras cambiar el código, `build.bat` recompila el frontend en `backend/dist` y regenera los tres binarios.
 
 ---
 

@@ -161,7 +161,7 @@ export default function App() {
     }
   }, []);
 
-  // Handle browse tab from URL query params (when opened in a new tab)
+  // Handle /browse?q=&genre=... links (bookmarks; the navbar filters now search in place)
   useEffect(() => {
     if (route.page === 'browse') {
       const q = route.query || '';

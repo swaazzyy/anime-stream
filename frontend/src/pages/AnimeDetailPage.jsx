@@ -14,6 +14,7 @@ import {
   Layers
 } from 'lucide-react';
 import { api } from '../services/api';
+import EpisodeBlocks from '../components/EpisodeBlocks';
 
 const LIST_STATUSES = [
   { id: 'plan_to_watch', label: 'Para el Futuro (Por ver)', short: 'Para el Futuro' },
@@ -361,9 +362,10 @@ export default function AnimeDetailPage({
 
         {/* Tab 1: Episodes Grid */}
         {selectedTab === 'episodes' && (
-          <div>
+          <EpisodeBlocks key={anime.id} episodes={episodeList} dark={isDark} onJump={(n) => onNavigate(`/media/${anime.id}/${n}`)}>
+            {(shown) => (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {episodeList.map((ep) => (
+              {shown.map((ep) => (
                 <div
                   key={ep.number}
                   className={`group relative rounded-xl overflow-hidden border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer flex flex-col justify-between ${
@@ -439,7 +441,8 @@ export default function AnimeDetailPage({
                 </div>
               ))}
             </div>
-          </div>
+            )}
+          </EpisodeBlocks>
         )}
 
         {/* Tab 2: Synopsis & Details */}

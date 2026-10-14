@@ -1,6 +1,7 @@
 package main
 
 import (
+	"compress/gzip"
 	"context"
 	"embed"
 	"io/fs"
@@ -35,6 +36,33 @@ func corsMiddleware(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+// gzipMiddleware compresses responses for clients that accept it: JSON lists and the JS bundle shrink ~5-10x.
+func gzipMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Vary", "Accept-Encoding")
+		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") || r.Header.Get("Range") != "" {
+			next.ServeHTTP(w, r)
+			return
+		}
+		w.Header().Set("Content-Encoding", "gzip")
+		gz := gzip.NewWriter(w) // ponytail: one compressor per response, pool them if this ever shows up in a profile
+		defer gz.Close()
+		next.ServeHTTP(gzipResponseWriter{w, gz}, r)
+	})
+}
+
+type gzipResponseWriter struct {
+	http.ResponseWriter
+	gz *gzip.Writer
+}
+
+func (g gzipResponseWriter) Write(b []byte) (int, error) { return g.gz.Write(b) }
+
+func (g gzipResponseWriter) WriteHeader(code int) {
+	g.Header().Del("Content-Length") // set by file serving for the uncompressed size
+	g.ResponseWriter.WriteHeader(code)
 }
 
 func getenv(key, fallback string) string {
@@ -99,12 +127,16 @@ func main() {
 			http.ServeFileFS(w, r, distFS, "index.html")
 			return
 		}
+		// Vite puts a content hash in every /assets/ filename, so browsers can keep them for good.
+		if strings.HasPrefix(r.URL.Path, "/assets/") {
+			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		}
 		fileServer.ServeHTTP(w, r)
 	})
 
 	server := &http.Server{
 		Addr:         ":" + port,
-		Handler:      http.MaxBytesHandler(corsMiddleware(auth.Middleware(mux)), 1<<20), // no API body needs more than 1 MB
+		Handler:      http.MaxBytesHandler(gzipMiddleware(corsMiddleware(auth.Middleware(mux))), 1<<20), // no API body needs more than 1 MB
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 60 * time.Second,
 		IdleTimeout:  120 * time.Second,

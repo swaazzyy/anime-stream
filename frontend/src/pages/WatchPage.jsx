@@ -1,25 +1,16 @@
-import { useState, useEffect, useRef } from 'react';
-import { 
-  ArrowLeft, 
-  Play, 
-  Pause, 
-  Volume2, 
-  VolumeX, 
-  Maximize, 
-  Minimize, 
-  ChevronLeft, 
-  ChevronRight, 
-  RotateCcw,
-  RotateCw,
-  SkipForward,
-  FastForward,
-  Download, 
-  Bookmark, 
-  Layers,
-  Check
+import { useState, useEffect } from 'react';
+import {
+  ArrowLeft,
+  Play,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Bookmark,
+  Layers
 } from 'lucide-react';
 import { api } from '../services/api';
 import AnimeAV1Logo from '../components/AnimeAV1Logo';
+import EpisodeBlocks from '../components/EpisodeBlocks';
 
 export default function WatchPage({
   slug,
@@ -38,27 +29,6 @@ export default function WatchPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedServer, setSelectedServer] = useState(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(initialProgress);
-  const [duration, setDuration] = useState(1425);
-  const [volume, setVolume] = useState(1);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [playbackSpeed, setPlaybackSpeed] = useState(1);
-  const [showSpeedMenu, setShowSpeedMenu] = useState(false);
-  const [showControls, setShowControls] = useState(true);
-
-  const videoRef = useRef(null);
-  const playerContainerRef = useRef(null);
-  const hideControlsTimeout = useRef(null);
-  const lastSyncTime = useRef(0);
-
-  // Keep the Maximize/Minimize icon in sync (also when the user exits with Esc)
-  useEffect(() => {
-    const sync = () => setIsFullscreen(!!document.fullscreenElement);
-    document.addEventListener('fullscreenchange', sync);
-    return () => document.removeEventListener('fullscreenchange', sync);
-  }, []);
 
   // Load Anime details & Episode data concurrently
   useEffect(() => {
@@ -66,7 +36,6 @@ export default function WatchPage({
     let isMounted = true;
     setLoading(true);
     setError(null);
-    setIsPlaying(false);
     setSelectedServer(null);
 
     Promise.all([
@@ -107,7 +76,7 @@ export default function WatchPage({
   const hasNextEpisode = !isMovie && episodeNum < maxEpNum;
   const hasPrevEpisode = !isMovie && episodeNum > minEpNum;
   const isInWatchlist = !!(anime && watchlistMap[anime.id]);
-  const isEmbed = selectedServer?.server_type === 'embed';
+  const hasServer = !!selectedServer;
 
   const saveProgress = (progress, duration, completed) =>
     api.saveWatchProgress({
@@ -121,47 +90,10 @@ export default function WatchPage({
       completed,
     }).then(() => onProgressSaved?.(), err => console.error("Error saving progress:", err));
 
-  // Video element setup & progress sync
+  // Every server is a cross-origin embed whose playback position can't be read, so the progress
+  // saved is the time this page stays visible: enough for "Siguiendo Viendo" to resume the right episode.
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video || isEmbed || !anime) return;
-
-    if (initialProgress > 0 && currentTime === initialProgress) {
-      video.currentTime = initialProgress;
-    }
-
-    const handleTimeUpdate = () => {
-      const cur = video.currentTime;
-      setCurrentTime(cur);
-      if (video.duration) setDuration(video.duration);
-
-      const now = Math.floor(cur);
-      if (Math.abs(now - lastSyncTime.current) >= 5) {
-        lastSyncTime.current = now;
-        saveProgress(cur, video.duration || 1425, video.duration ? cur >= video.duration * 0.92 : false);
-      }
-    };
-
-    const handleEnded = () => {
-      saveProgress(video.duration || 1425, video.duration || 1425, true);
-      if (hasNextEpisode) {
-        onNavigate(`/media/${anime.id}/${episodeNum + 1}`);
-      }
-    };
-
-    video.addEventListener('timeupdate', handleTimeUpdate);
-    video.addEventListener('ended', handleEnded);
-
-    return () => {
-      video.removeEventListener('timeupdate', handleTimeUpdate);
-      video.removeEventListener('ended', handleEnded);
-    };
-  }, [anime, episodeNum, episodeData, initialProgress, selectedServer, hasNextEpisode]);
-
-  // Embedded players are cross-origin iframes whose playback position can't be read, so for them the
-  // progress saved is the time this page stays visible: enough for "Siguiendo Viendo" to resume the right episode.
-  useEffect(() => {
-    if (!anime || !isEmbed) return;
+    if (!anime || !hasServer) return;
     const duration = episodeData?.duration || 1440;
     let watched = initialProgress;
     const timer = setInterval(() => {
@@ -170,106 +102,7 @@ export default function WatchPage({
       saveProgress(watched, duration, watched >= duration * 0.9);
     }, 15000);
     return () => clearInterval(timer);
-  }, [anime, episodeData, episodeNum, initialProgress, isEmbed]);
-
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
-      if (selectedServer?.server_type === 'embed') return;
-
-      if (e.key === ' ' || e.key === 'k') {
-        e.preventDefault();
-        togglePlay();
-      } else if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        seekRelative(10);
-      } else if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        seekRelative(-10);
-      } else if (e.key === 'f') {
-        e.preventDefault();
-        toggleFullscreen();
-      } else if (e.key === 'm') {
-        e.preventDefault();
-        toggleMute();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  });
-
-  const togglePlay = () => {
-    const video = videoRef.current;
-    if (!video) return;
-    // isPlaying follows the video's own play/pause events, so a rejected play() can't leave it stuck on true
-    if (video.paused) {
-      video.play().catch(e => console.log("Play interrupted:", e));
-    } else {
-      video.pause();
-    }
-  };
-
-  const seekRelative = (sec) => {
-    const video = videoRef.current;
-    if (!video) return;
-    video.currentTime = Math.max(0, Math.min(video.duration || 1425, video.currentTime + sec));
-  };
-
-  const handleSeekChange = (e) => {
-    const video = videoRef.current;
-    const newTime = parseFloat(e.target.value);
-    setCurrentTime(newTime);
-    if (video) video.currentTime = newTime;
-  };
-
-  const toggleMute = () => {
-    const video = videoRef.current;
-    if (!video) return;
-    video.muted = !isMuted;
-    setIsMuted(!isMuted);
-  };
-
-  const handleVolumeChange = (e) => {
-    const val = parseFloat(e.target.value);
-    setVolume(val);
-    if (videoRef.current) {
-      videoRef.current.volume = val;
-      videoRef.current.muted = val === 0;
-      setIsMuted(val === 0);
-    }
-  };
-
-  const toggleFullscreen = () => {
-    if (!playerContainerRef.current) return;
-    if (!document.fullscreenElement) {
-      playerContainerRef.current.requestFullscreen().catch(() => {});
-    } else {
-      document.exitFullscreen().catch(() => {});
-    }
-  };
-
-  const changeSpeed = (speed) => {
-    setPlaybackSpeed(speed);
-    if (videoRef.current) videoRef.current.playbackRate = speed;
-    setShowSpeedMenu(false);
-  };
-
-  const formatTime = (seconds) => {
-    if (isNaN(seconds)) return '00:00';
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const handleMouseMove = () => {
-    setShowControls(true);
-    clearTimeout(hideControlsTimeout.current);
-    hideControlsTimeout.current = setTimeout(() => {
-      if (videoRef.current && !videoRef.current.paused) setShowControls(false); // live check: isPlaying here would be stale
-    }, 3000);
-  };
+  }, [anime, episodeData, episodeNum, initialProgress, hasServer]);
 
   const episodesList = anime?.episodes || Array.from({ length: Math.min(totalEpisodes, 24) }, (_, i) => ({
     number: i + 1,
@@ -354,9 +187,7 @@ export default function WatchPage({
       {/* Main Video Cinema Container */}
       <div className="max-w-7xl mx-auto px-0 sm:px-4 lg:px-8 py-0 sm:py-4">
         
-        <div 
-          ref={playerContainerRef}
-          onMouseMove={handleMouseMove}
+        <div
           className="relative w-full aspect-video bg-black overflow-hidden sm:rounded-2xl border border-white/10 shadow-2xl"
         >
           {/* Rating Pill Badge */}
@@ -381,7 +212,7 @@ export default function WatchPage({
                 Volver a {anime?.title}
               </button>
             </div>
-          ) : isEmbed ? (
+          ) : (
             <iframe
               key={selectedServer.url}
               src={selectedServer.url}
@@ -390,155 +221,6 @@ export default function WatchPage({
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
             />
-          ) : (
-            <div 
-              className="relative w-full h-full flex items-center justify-center cursor-pointer"
-              onClick={togglePlay}
-            >
-              <video
-                ref={videoRef}
-                src={selectedServer?.url}
-                className="w-full h-full object-contain"
-                playsInline
-                preload="metadata"
-                onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
-              />
-
-              {/* Crunchyroll Bottom Controls Overlay for Direct Video */}
-              <div 
-                onClick={(e) => e.stopPropagation()}
-                className={`absolute bottom-0 left-0 right-0 z-30 pt-8 pb-3 px-4 sm:px-6 bg-gradient-to-t from-black/95 via-black/60 to-transparent transition-opacity duration-300 ${
-                  showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
-                }`}
-              >
-                {/* Scrubber Bar */}
-                <div className="relative w-full flex items-center group/seek mb-2">
-                  <input
-                    type="range"
-                    min={0}
-                    max={duration || 1425}
-                    step={0.5}
-                    value={currentTime}
-                    onChange={handleSeekChange}
-                    className="w-full h-1 bg-white/20 rounded-full appearance-none cursor-pointer accent-[#f47521] hover:h-1.5 transition-all"
-                  />
-                </div>
-
-                {/* Control Icons Row */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <button
-                      type="button"
-                      onClick={() => seekRelative(-10)}
-                      className="text-white hover:text-[#f47521] transition-colors p-1"
-                      title="Retroceder 10s"
-                    >
-                      <RotateCcw className="w-5 h-5" />
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={togglePlay}
-                      className="text-white hover:text-[#f47521] transition-colors p-1"
-                      title={isPlaying ? "Pausar" : "Reproducir"}
-                    >
-                      {isPlaying ? <Pause className="w-6 h-6 fill-white" /> : <Play className="w-6 h-6 fill-white ml-0.5" />}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => seekRelative(10)}
-                      className="text-white hover:text-[#f47521] transition-colors p-1"
-                      title="Avanzar 10s"
-                    >
-                      <RotateCw className="w-5 h-5" />
-                    </button>
-
-                    <div className="flex items-center gap-2">
-                      <button 
-                        type="button" 
-                        onClick={toggleMute} 
-                        className="text-white hover:text-[#f47521] transition-colors p-1"
-                      >
-                        {isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-                      </button>
-                      <input
-                        type="range"
-                        min={0}
-                        max={1}
-                        step={0.05}
-                        value={isMuted ? 0 : volume}
-                        onChange={handleVolumeChange}
-                        className="w-14 sm:w-20 h-1 bg-white/30 rounded-full appearance-none cursor-pointer accent-[#f47521]"
-                      />
-                    </div>
-
-                    <span className="text-xs font-mono font-medium text-gray-300">
-                      {formatTime(currentTime)} / {formatTime(duration)}
-                    </span>
-
-                    <button
-                      type="button"
-                      onClick={() => seekRelative(85)}
-                      className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 hover:bg-[#f47521] hover:text-black text-gray-200 text-xs font-bold transition-all border border-white/10"
-                    >
-                      <FastForward className="w-3.5 h-3.5" />
-                      <span>Saltar Intro</span>
-                    </button>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    {hasNextEpisode && (
-                      <button
-                        type="button"
-                        onClick={() => onNavigate(`/media/${slug}/${episodeNum + 1}`)}
-                        className="text-white hover:text-[#f47521] transition-colors p-1"
-                        title="Siguiente episodio"
-                      >
-                        <SkipForward className="w-5 h-5" />
-                      </button>
-                    )}
-
-                    <div className="relative">
-                      <button
-                        type="button"
-                        onClick={() => setShowSpeedMenu(!showSpeedMenu)}
-                        className="text-xs font-bold text-white hover:text-[#f47521] px-1.5 py-1 rounded"
-                      >
-                        {playbackSpeed}x
-                      </button>
-
-                      {showSpeedMenu && (
-                        <div className="absolute bottom-full right-0 mb-2 bg-[#181920] border border-white/10 rounded-xl shadow-2xl py-1 w-24 z-50">
-                          {[0.75, 1, 1.25, 1.5, 2].map((spd) => (
-                            <button
-                              key={spd}
-                              onClick={() => changeSpeed(spd)}
-                              className={`w-full px-3 py-1.5 text-xs text-left flex items-center justify-between hover:bg-white/10 ${
-                                playbackSpeed === spd ? 'text-[#f47521] font-bold' : 'text-gray-300'
-                              }`}
-                            >
-                              <span>{spd}x</span>
-                              {playbackSpeed === spd && <Check className="w-3 h-3 text-[#f47521]" />}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={toggleFullscreen}
-                      className="text-white hover:text-[#f47521] transition-colors p-1"
-                      title="Pantalla completa"
-                    >
-                      {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
           )}
         </div>
 
@@ -658,8 +340,10 @@ export default function WatchPage({
             </button>
           </div>
 
+          <EpisodeBlocks key={`${slug}-${episodeNum}`} episodes={episodesList} current={episodeNum} onJump={(n) => onNavigate(`/media/${slug}/${n}`)}>
+          {(shown) => (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {episodesList.map((ep) => {
+            {shown.map((ep) => {
               const isCurrent = ep.number === episodeNum;
               return (
                 <div
@@ -713,6 +397,8 @@ export default function WatchPage({
               );
             })}
           </div>
+          )}
+          </EpisodeBlocks>
         </div>
 
       </div>

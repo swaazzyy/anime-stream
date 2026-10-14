@@ -77,7 +77,8 @@ var (
 	cachedCatalog CatalogResponse
 )
 
-// buildInstantCatalog constructs an immediate catalog from the curated list (no network except latest caps)
+// buildInstantCatalog constructs an immediate catalog from the curated lists without any network call,
+// so startup never waits on animeav1.com; the background refresh replaces it with live data.
 func buildInstantCatalog() CatalogResponse {
 	popular := slices.Clone(CuratedAnimeAV1)
 	slices.Reverse(popular)
@@ -93,7 +94,7 @@ func buildInstantCatalog() CatalogResponse {
 		HeroSlides: CuratedAnimeAV1[:5],
 		Trending:   CuratedAnimeAV1,
 		Popular:    popular,
-		LatestCaps: GetAnimeAV1LatestEpisodes(),
+		LatestCaps: CuratedAnimeAV1LatestCards,
 		TopRated:   topRated,
 	}
 }
@@ -313,21 +314,25 @@ func SearchAnime(query string, filters url.Values) ([]Anime, error) {
 		return false
 	}
 
-	// 1. Direct slug lookup if query looks like a slug or title (e.g. sword-art-online-alicization-war-of-underworld)
-	if directAnime, err := FetchAnimeAV1Details(Slugify(query)); err == nil && directAnime != nil {
+	// 1. Direct slug lookup if query looks like a slug or title (e.g. sword-art-online-alicization-war-of-underworld),
+	// 2. live search from AnimeAV1.com (plus a spaced variant for slug-like queries; already enriched), all in parallel
+	var directAnime *Anime
+	var av1Results, spacedResults []Anime
+	var wg sync.WaitGroup
+	wg.Go(func() { directAnime, _ = FetchAnimeAV1Details(Slugify(query)) })
+	wg.Go(func() { av1Results, _ = FetchAnimeAV1Catalog(1, "default", query) })
+	if strings.Contains(query, "-") {
+		wg.Go(func() { spacedResults, _ = FetchAnimeAV1Catalog(1, "default", strings.ReplaceAll(query, "-", " ")) })
+	}
+	wg.Wait()
+
+	if directAnime != nil {
 		add(*directAnime)
 		cacheMutex.Lock()
 		animeCache[directAnime.ID] = directAnime
 		cacheMutex.Unlock()
 	}
-
-	// 2. Live search from AnimeAV1.com (plus a spaced variant for slug-like queries); already enriched
-	av1Results, _ := FetchAnimeAV1Catalog(1, "default", query)
-	if strings.Contains(query, "-") {
-		more, _ := FetchAnimeAV1Catalog(1, "default", strings.ReplaceAll(query, "-", " "))
-		av1Results = append(av1Results, more...)
-	}
-	for _, a := range av1Results {
+	for _, a := range append(av1Results, spacedResults...) {
 		add(a)
 	}
 

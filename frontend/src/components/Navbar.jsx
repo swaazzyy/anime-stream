@@ -56,16 +56,7 @@ export default function Navbar({
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     setShowFilters(false);
-    if (activeCount > 0) {
-      const params = new URLSearchParams();
-      if (searchQuery.trim()) params.set('q', searchQuery.trim());
-      Object.entries(activeFilters).forEach(([k, v]) => {
-        if (v) params.set(k, v);
-      });
-      window.open(`/browse?${params.toString()}`, '_blank');
-      return;
-    }
-    onSearch(searchQuery, {});
+    onSearch(searchQuery, activeFilters);
   };
 
   const clearFilters = () => {
