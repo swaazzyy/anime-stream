@@ -13,3 +13,4 @@ go build -trimpath -ldflags="-s -w" -o ..\anime-stream-linux-amd64 . || exit /b 
 set GOARCH=arm64
 go build -trimpath -ldflags="-s -w" -o ..\anime-stream-linux-arm64 . || exit /b 1
 echo Done: anime-stream-windows-amd64.exe, anime-stream-linux-amd64, anime-stream-linux-arm64
+
